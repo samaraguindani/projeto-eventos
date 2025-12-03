@@ -4,7 +4,7 @@ Este guia completo te levará do zero até ter o sistema totalmente funcional na
 
 ## 📋 Pré-requisitos
 
-- Acesso SSH à VM: `ssh univates@177.44.248.110`
+- Acesso SSH à VM: `ssh univates@177.44.248.102`
 - Terminal/SSH client instalado (Windows: PowerShell, Git Bash, ou PuTTY)
 
 ---
@@ -14,7 +14,7 @@ Este guia completo te levará do zero até ter o sistema totalmente funcional na
 ### No Windows (PowerShell ou Git Bash):
 
 ```bash
-ssh univates@177.44.248.110
+ssh univates@177.44.248.102
 ```
 
 **Primeira conexão:** Digite `yes` quando perguntado sobre a autenticidade do host.
@@ -321,7 +321,7 @@ Abra 5 conexões SSH diferentes:
 
 ```bash
 # Terminal 1, 2, 3, 4, 5
-ssh univates@177.44.248.110
+ssh univates@177.44.248.102
 ```
 
 ### Opção B: Usar Screen (Recomendado)
@@ -533,7 +533,7 @@ cd ~/projeto-eventos/portal
 python3 -m http.server 8080
 ```
 
-**Acessar:** `http://177.44.248.110:8080` (se porta 8080 estiver aberta no firewall)
+**Acessar:** `http://177.44.248.102:8080` (se porta 8080 estiver aberta no firewall)
 
 ### 10.2. Opção B: Baixar Portal para Testar Localmente (Recomendado)
 
@@ -541,7 +541,7 @@ python3 -m http.server 8080
 
 ```powershell
 # Baixar portal da VM
-scp -r univates@177.44.248.110:~/projeto-eventos/portal C:\projeto-eventos-portal
+scp -r univates@177.44.248.102:~/projeto-eventos/portal C:\projeto-eventos-portal
 ```
 
 **Ou clonar do repositório se já tiver localmente.**
@@ -563,10 +563,10 @@ const API_CONFIG = {
 **Para:**
 ```javascript
 const API_CONFIG = {
-    AUTH: 'http://177.44.248.110:5001/api',
-    EVENTOS: 'http://177.44.248.110:5002/api',
-    INSCRICOES: 'http://177.44.248.110:8001/api/inscricoes',
-    CERTIFICADOS: 'http://177.44.248.110:8002/api/certificados'
+    AUTH: 'http://177.44.248.102:5001/api',
+    EVENTOS: 'http://177.44.248.102:5002/api',
+    INSCRICOES: 'http://177.44.248.102:8001/api/inscricoes',
+    CERTIFICADOS: 'http://177.44.248.102:8002/api/certificados'
 };
 ```
 
@@ -723,7 +723,7 @@ psql -U postgres -d eventos_db -c "SELECT 1;"
 
 ```bash
 # 1. Conectar à VM
-ssh univates@177.44.248.110
+ssh univates@177.44.248.102
 
 # 2. Ir para o projeto
 cd ~/projeto-eventos

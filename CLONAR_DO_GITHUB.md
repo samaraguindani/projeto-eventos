@@ -9,7 +9,7 @@ Guia rápido e direto para clonar seu projeto do GitHub na VM.
 ### 1. Conectar à VM
 
 ```bash
-ssh univates@177.44.248.110
+ssh univates@177.44.248.102
 ```
 
 ### 2. Instalar Git (se necessário)
@@ -53,7 +53,7 @@ ls -la
 
 ```bash
 # Conectar à VM
-ssh univates@177.44.248.110
+ssh univates@177.44.248.102
 
 # Gerar chave SSH
 ssh-keygen -t ed25519 -C "seu.email@exemplo.com"
@@ -193,7 +193,7 @@ ssh -T git@github.com
 
 ```bash
 # 1. Conectar à VM
-ssh univates@177.44.248.110
+ssh univates@177.44.248.102
 
 # 2. Instalar Git (se necessário)
 sudo apt install git -y

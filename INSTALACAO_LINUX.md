@@ -4,13 +4,13 @@ Este guia detalha passo a passo como instalar e executar o Sistema de Eventos em
 
 ## 🔌 Acesso à VM
 
-**Servidor:** `177.44.248.110`  
+**Servidor:** `177.44.248.102`  
 **Usuário:** `univates`  
-**Acesso SSH:** `ssh univates@177.44.248.110`
+**Acesso SSH:** `ssh univates@177.44.248.102`
 
 ### Conectar via SSH
 ```bash
-ssh univates@177.44.248.110
+ssh univates@177.44.248.102
 ```
 
 Após conectar, você estará no diretório home do usuário `univates`. O projeto deve estar localizado em `/home/univates/projeto-eventos` ou similar.
@@ -336,12 +336,12 @@ sudo systemctl start eventos-eventos
 
 ### Acesso Remoto (de fora da VM)
 Se configurado firewall e portas abertas, acesse via IP da VM:
-- Portal Web: `http://177.44.248.110` (se configurado Nginx)
-- Auth Service: `http://177.44.248.110:5001`
-- Eventos Service: `http://177.44.248.110:5002`
-- Inscrições Service: `http://177.44.248.110:8001`
-- Certificados Service: `http://177.44.248.110:8002`
-- Email Service: `http://177.44.248.110:8003`
+- Portal Web: `http://177.44.248.102` (se configurado Nginx)
+- Auth Service: `http://177.44.248.102:5001`
+- Eventos Service: `http://177.44.248.102:5002`
+- Inscrições Service: `http://177.44.248.102:8001`
+- Certificados Service: `http://177.44.248.102:8002`
+- Email Service: `http://177.44.248.102:8003`
 
 **Nota:** Certifique-se de que as portas estão abertas no firewall da VM.
 
