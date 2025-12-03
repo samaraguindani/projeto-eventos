@@ -1,0 +1,16 @@
+{
+    "name": "eventos/inscricoes-service",
+    "description": "Serviço de Inscrições",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+        "ext-pdo": "*",
+        "ext-pdo_pgsql": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        }
+    }
+}
+

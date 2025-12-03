@@ -1,0 +1,17 @@
+{
+    "name": "eventos/certificados-service",
+    "description": "Serviço de Certificados",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+        "ext-pdo": "*",
+        "ext-pdo_pgsql": "*",
+        "tecnickcom/tcpdf": "^6.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        }
+    }
+}
+

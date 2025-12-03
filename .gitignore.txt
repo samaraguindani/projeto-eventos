@@ -1,0 +1,20 @@
+# Dotnet
+bin/
+obj/
+*.user
+*.suo
+
+# Node
+node_modules/
+npm-debug.log
+
+# PHP
+vendor/
+
+# Logs
+*.log
+logs/
+
+# Sistema
+.DS_Store
+Thumbs.db
