@@ -2,6 +2,19 @@
 
 Este guia detalha passo a passo como instalar e executar o Sistema de Eventos em uma VM Linux.
 
+## 🔌 Acesso à VM
+
+**Servidor:** `177.44.248.110`  
+**Usuário:** `univates`  
+**Acesso SSH:** `ssh univates@177.44.248.110`
+
+### Conectar via SSH
+```bash
+ssh univates@177.44.248.110
+```
+
+Após conectar, você estará no diretório home do usuário `univates`. O projeto deve estar localizado em `/home/univates/projeto-eventos` ou similar.
+
 ## 1. Atualizar Sistema
 
 ```bash
@@ -25,19 +38,35 @@ sudo -u postgres psql
 # Criar banco de dados
 CREATE DATABASE eventos_db;
 
-# Criar usuário (opcional)
-CREATE USER eventos_user WITH PASSWORD 'senha_segura';
-GRANT ALL PRIVILEGES ON DATABASE eventos_db TO eventos_user;
+# Configurar senha do usuário postgres (se necessário)
+ALTER USER postgres WITH PASSWORD 'postgres';
 
 # Sair
 \q
 ```
 
+**Nota:** O banco de dados está configurado com:
+- **Database:** `eventos_db`
+- **User:** `postgres`
+- **Password:** `postgres`
+- **Port:** `5432`
+- **Host:** `localhost` (quando os serviços rodam na mesma VM)
+
 ## 4. Executar Script SQL
 
 ```bash
+# A partir do diretório do projeto
 psql -U postgres -d eventos_db -f database/schema.sql
 ```
+
+**Configuração do Banco de Dados:**
+- **Host:** `localhost` (PostgreSQL na mesma VM)
+- **Port:** `5432`
+- **Database:** `eventos_db`
+- **User:** `postgres`
+- **Password:** `postgres`
+
+Todos os serviços estão configurados para usar essas credenciais por padrão.
 
 ## 5. Instalar .NET 8 SDK
 
@@ -58,6 +87,24 @@ sudo apt install software-properties-common -y
 sudo add-apt-repository ppa:ondrej/php -y
 sudo apt update
 sudo apt install php8.1 php8.1-cli php8.1-pgsql php8.1-mbstring -y
+```
+
+## 6.1. Configurar Acesso ao PostgreSQL
+
+Se necessário, ajustar o arquivo `pg_hba.conf` para permitir conexões:
+
+```bash
+sudo nano /etc/postgresql/*/main/pg_hba.conf
+```
+
+Adicionar ou verificar a linha:
+```
+host    all             all             127.0.0.1/32            md5
+```
+
+Reiniciar PostgreSQL:
+```bash
+sudo systemctl restart postgresql
 ```
 
 ## 7. Instalar Composer (Opcional)
@@ -157,8 +204,8 @@ After=network.target postgresql.service
 
 [Service]
 Type=simple
-User=seu_usuario
-WorkingDirectory=/caminho/para/projeto-eventos/services/auth-service
+User=univates
+WorkingDirectory=/home/univates/projeto-eventos/services/auth-service
 ExecStart=/usr/bin/dotnet run
 Restart=always
 RestartSec=10
@@ -176,8 +223,8 @@ After=network.target postgresql.service
 
 [Service]
 Type=simple
-User=seu_usuario
-WorkingDirectory=/caminho/para/projeto-eventos/services/eventos-service
+User=univates
+WorkingDirectory=/home/univates/projeto-eventos/services/eventos-service
 ExecStart=/usr/bin/dotnet run
 Restart=always
 RestartSec=10
@@ -227,7 +274,7 @@ server {
 
     # Portal Web
     location / {
-        root /caminho/para/projeto-eventos/portal;
+        root /home/univates/projeto-eventos/portal;
         index index.html;
     }
 }
@@ -246,7 +293,7 @@ sudo systemctl restart nginx
 crontab -e
 
 # Adicionar linha:
-*/5 * * * * cd /caminho/para/projeto-eventos/services/email-service && php worker.php >> /var/log/email-worker.log 2>&1
+*/5 * * * * cd /home/univates/projeto-eventos/services/email-service && php worker.php >> /var/log/email-worker.log 2>&1
 ```
 
 ## 13. Verificar Instalação
@@ -279,12 +326,24 @@ sudo systemctl start eventos-eventos
 
 ## 15. Acessar Sistema
 
+### Acesso Local (na VM)
 - Portal Web: `http://localhost` (se configurado Nginx) ou abra `portal/index.html` diretamente
 - Auth Service: `http://localhost:5001`
 - Eventos Service: `http://localhost:5002`
 - Inscrições Service: `http://localhost:8001`
 - Certificados Service: `http://localhost:8002`
 - Email Service: `http://localhost:8003`
+
+### Acesso Remoto (de fora da VM)
+Se configurado firewall e portas abertas, acesse via IP da VM:
+- Portal Web: `http://177.44.248.110` (se configurado Nginx)
+- Auth Service: `http://177.44.248.110:5001`
+- Eventos Service: `http://177.44.248.110:5002`
+- Inscrições Service: `http://177.44.248.110:8001`
+- Certificados Service: `http://177.44.248.110:8002`
+- Email Service: `http://177.44.248.110:8003`
+
+**Nota:** Certifique-se de que as portas estão abertas no firewall da VM.
 
 ## Troubleshooting
 

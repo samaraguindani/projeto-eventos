@@ -4,12 +4,19 @@
 
 ### 1. Banco de Dados (2 min)
 ```bash
-# Criar banco
-sudo -u postgres psql -c "CREATE DATABASE eventos_db;"
+# Criar banco (se ainda não existir)
+sudo -u postgres psql -c "CREATE DATABASE eventos_db;" || true
 
 # Executar schema
 psql -U postgres -d eventos_db -f database/schema.sql
 ```
+
+**Configuração do PostgreSQL na VM:**
+- **Host:** `localhost` (quando serviços rodam na VM)
+- **Port:** `5432`
+- **Database:** `eventos_db`
+- **User:** `postgres`
+- **Password:** `postgres`
 
 ### 2. Iniciar Serviços (3 min)
 

@@ -179,7 +179,7 @@ Configure virtual hosts apontando para cada diretório de serviço.
 Crie arquivos `.env` ou configure variáveis de ambiente:
 
 ```bash
-# Database
+# Database (PostgreSQL na VM)
 export DB_HOST=localhost
 export DB_PORT=5432
 export DB_NAME=eventos_db
