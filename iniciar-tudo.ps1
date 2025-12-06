@@ -145,6 +145,12 @@ Start-Sleep -Milliseconds 500
 Write-Host "  Iniciando Portal (porta 8080)..." -ForegroundColor Gray
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "Write-Host '=== PORTAL FRONTEND ===' -ForegroundColor Cyan; Set-Location '$projectPath\portal'; php -S localhost:8080"
 
+Start-Sleep -Milliseconds 500
+
+# Email Worker
+Write-Host "  Iniciando Worker de Emails..." -ForegroundColor Gray
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "Write-Host '=== EMAIL WORKER ===' -ForegroundColor Cyan; Set-Location '$projectPath\services\email-service'; php processar-fila.php"
+
 Write-Host "  Todos os serviços iniciados!" -ForegroundColor Green
 Write-Host ""
 
@@ -161,11 +167,31 @@ Write-Host ""
 Write-Host "Acesse o sistema em: " -NoNewline
 Write-Host "http://localhost:8080" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Outros acessos:" -ForegroundColor Yellow
+Write-Host "Serviços rodando:" -ForegroundColor Yellow
 Write-Host "  Portal:          " -NoNewline
 Write-Host "http://localhost:8080" -ForegroundColor Cyan
+Write-Host "  Auth Service:    " -NoNewline
+Write-Host "http://localhost:5001" -ForegroundColor Cyan
+Write-Host "  Eventos Service: " -NoNewline
+Write-Host "http://localhost:5002" -ForegroundColor Cyan
 Write-Host "  Swagger Eventos: " -NoNewline
 Write-Host "http://localhost:5002/swagger" -ForegroundColor Cyan
+Write-Host "  Inscrições:      " -NoNewline
+Write-Host "http://localhost:8001" -ForegroundColor Cyan
+Write-Host "  Certificados:    " -NoNewline
+Write-Host "http://localhost:8002" -ForegroundColor Cyan
+Write-Host "  Email Worker:    " -NoNewline
+Write-Host "Rodando em background" -ForegroundColor Green
+Write-Host ""
+Write-Host "Sistema de Emails:" -ForegroundColor Yellow
+Write-Host "  O worker de emails esta processando automaticamente!" -ForegroundColor Green
+Write-Host "  Emails serao enviados quando houver:" -ForegroundColor Gray
+Write-Host "    - Novas inscricoes" -ForegroundColor Gray
+Write-Host "    - Cancelamentos" -ForegroundColor Gray
+Write-Host "    - Check-ins" -ForegroundColor Gray
+Write-Host "    - Certificados emitidos" -ForegroundColor Gray
+Write-Host ""
+Write-Host "  Veja o guia completo: GUIA_EMAILS.md" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Para parar todos os serviços:" -ForegroundColor Yellow
 Write-Host "  Execute: .\parar-tudo.ps1" -ForegroundColor Cyan

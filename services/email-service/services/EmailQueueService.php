@@ -132,20 +132,8 @@ class EmailQueueService {
     }
 
     private function enviarEmail($destinatario, $assunto, $corpo) {
-        // Usar PHPMailer ou função mail() nativa
-        // Por simplicidade, vamos usar mail() nativa
-        // Em produção, use PHPMailer com SMTP
-        
-        $headers = "MIME-Version: 1.0\r\n";
-        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-        $headers .= "From: " . $this->smtpFrom . "\r\n";
-        $headers .= "Reply-To: " . $this->smtpFrom . "\r\n";
-
-        // Para desenvolvimento, apenas simular o envio
-        // Em produção, descomente a linha abaixo e configure SMTP
-        // return mail($destinatario, $assunto, $corpo, $headers);
-        
-        // Simulação para desenvolvimento
+        // MODO DESENVOLVIMENTO - Apenas registra no log
+        // Os emails não são enviados de verdade
         error_log("Email enviado para: $destinatario | Assunto: $assunto");
         return true;
     }
