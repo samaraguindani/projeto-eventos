@@ -88,14 +88,27 @@ class Inscricao {
     }
 
     public function cancelar($id, $usuarioId) {
+        // Primeiro, buscar os dados da inscrição antes de deletar
         $stmt = $this->db->prepare("
-            UPDATE inscricoes 
-            SET status = 'cancelada', updated_at = CURRENT_TIMESTAMP
+            SELECT id, evento_id, usuario_id
+            FROM inscricoes 
             WHERE id = :id AND usuario_id = :usuario_id AND status = 'ativa'
-            RETURNING id, evento_id
         ");
         $stmt->execute(['id' => $id, 'usuario_id' => $usuarioId]);
-        return $stmt->fetch();
+        $inscricao = $stmt->fetch();
+        
+        if (!$inscricao) {
+            return false;
+        }
+        
+        // Deletar a inscrição (isso vai liberar a vaga através do trigger)
+        $stmt = $this->db->prepare("
+            DELETE FROM inscricoes 
+            WHERE id = :id AND usuario_id = :usuario_id
+        ");
+        $stmt->execute(['id' => $id, 'usuario_id' => $usuarioId]);
+        
+        return $inscricao;
     }
 
     public function registrarPresenca($codigoInscricao) {
