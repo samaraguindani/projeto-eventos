@@ -427,6 +427,33 @@ body {
     font-size: 1.1em;
 }
 
+/* Estilo para campos de senha com botão de mostrar */
+.form-group > div[style*="position: relative"] {
+    position: relative;
+}
+
+.form-group > div[style*="position: relative"] input {
+    padding-right: 45px !important;
+}
+
+.form-group > div[style*="position: relative"] button {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #666;
+    padding: 5px;
+    z-index: 10;
+}
+
+.form-group > div[style*="position: relative"] button:hover {
+    color: #333;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .navbar .container {

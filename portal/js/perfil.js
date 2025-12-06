@@ -65,19 +65,40 @@ async function carregarPerfil() {
                     
                     <div class="form-group">
                         <label>Senha Atual</label>
-                        <input type="password" id="perfilSenhaAtual" class="form-control">
+                        <div style="position: relative;">
+                            <input type="password" id="perfilSenhaAtual" class="form-control">
+                            <button type="button" onclick="toggleSenha('perfilSenhaAtual', 'btnToggleSenhaAtual')" 
+                                    id="btnToggleSenhaAtual" 
+                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 18px; color: #666;">
+                                👁️
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="form-group">
                         <label>Nova Senha</label>
-                        <input type="password" id="perfilNovaSenha" class="form-control" 
-                               minlength="6">
+                        <div style="position: relative;">
+                            <input type="password" id="perfilNovaSenha" class="form-control" 
+                                   minlength="6">
+                            <button type="button" onclick="toggleSenha('perfilNovaSenha', 'btnToggleNovaSenha')" 
+                                    id="btnToggleNovaSenha" 
+                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 18px; color: #666;">
+                                👁️
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="form-group">
                         <label>Confirmar Nova Senha</label>
-                        <input type="password" id="perfilConfirmarSenha" class="form-control" 
-                               minlength="6">
+                        <div style="position: relative;">
+                            <input type="password" id="perfilConfirmarSenha" class="form-control" 
+                                   minlength="6">
+                            <button type="button" onclick="toggleSenha('perfilConfirmarSenha', 'btnToggleConfirmarSenha')" 
+                                    id="btnToggleConfirmarSenha" 
+                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 18px; color: #666;">
+                                👁️
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="form-actions">
@@ -157,6 +178,19 @@ async function salvarPerfil() {
 
     } catch (error) {
         mostrarMensagem(error.message || 'Erro ao salvar perfil', 'error');
+    }
+}
+
+function toggleSenha(inputId, buttonId) {
+    const input = document.getElementById(inputId);
+    const button = document.getElementById(buttonId);
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        button.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        button.textContent = '👁️';
     }
 }
 

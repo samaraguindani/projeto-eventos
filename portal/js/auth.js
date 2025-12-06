@@ -130,6 +130,22 @@ function mostrarMensagem(mensagem, tipo = 'info') {
     }, 5000);
 }
 
+// Função para mostrar/esconder senha (usada em login, cadastro e perfil)
+function toggleSenha(inputId, buttonId) {
+    const input = document.getElementById(inputId);
+    const button = document.getElementById(buttonId);
+    
+    if (input && button) {
+        if (input.type === 'password') {
+            input.type = 'text';
+            button.textContent = '🙈';
+        } else {
+            input.type = 'password';
+            button.textContent = '👁️';
+        }
+    }
+}
+
 
 
 

@@ -47,7 +47,14 @@
                     </div>
                     <div class="form-group">
                         <label>Senha:</label>
-                        <input type="password" id="loginSenha" required>
+                        <div style="position: relative;">
+                            <input type="password" id="loginSenha" required style="padding-right: 40px;">
+                            <button type="button" onclick="toggleSenha('loginSenha', 'btnToggleLoginSenha')" 
+                                    id="btnToggleLoginSenha" 
+                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 18px; color: #666;">
+                                👁️
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Entrar</button>
                 </form>
@@ -67,7 +74,14 @@
                     </div>
                     <div class="form-group">
                         <label>Senha:</label>
-                        <input type="password" id="cadastroSenha" required minlength="6">
+                        <div style="position: relative;">
+                            <input type="password" id="cadastroSenha" required minlength="6" style="padding-right: 40px;">
+                            <button type="button" onclick="toggleSenha('cadastroSenha', 'btnToggleCadastroSenha')" 
+                                    id="btnToggleCadastroSenha" 
+                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 18px; color: #666;">
+                                👁️
+                            </button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>CPF:</label>
