@@ -1,5 +1,5 @@
 <?php
-header('Content-Type: application/json; charset=utf-8');
+// Headers CORS
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
@@ -23,16 +23,25 @@ $path = str_replace('/api/certificados', '', $path);
 
 // Rotas
 if ($path === '/emitir' && $method === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
     $controller->emitirCertificado();
 } elseif ($path === '/validar' && $method === 'GET') {
+    header('Content-Type: application/json; charset=utf-8');
     $controller->validarCertificado();
+} elseif (preg_match('/^\/download\/(\d+)$/', $path, $matches) && $method === 'GET') {
+    // Download - não definir Content-Type aqui, o controller define
+    $id = (int)$matches[1];
+    $controller->downloadCertificado($id);
 } elseif (preg_match('/^\/inscricao\/(\d+)$/', $path, $matches) && $method === 'GET') {
+    header('Content-Type: application/json; charset=utf-8');
     $inscricaoId = (int)$matches[1];
     $controller->obterCertificadoPorInscricao($inscricaoId);
 } elseif (preg_match('/^\/(\d+)$/', $path, $matches) && $method === 'GET') {
+    header('Content-Type: application/json; charset=utf-8');
     $id = (int)$matches[1];
     $controller->obterCertificado($id);
 } else {
+    header('Content-Type: application/json; charset=utf-8');
     http_response_code(404);
     echo json_encode(['message' => 'Endpoint não encontrado']);
 }

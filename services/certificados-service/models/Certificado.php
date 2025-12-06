@@ -115,7 +115,8 @@ class Certificado {
         $stmt = $this->db->prepare("
             SELECT c.*, i.codigo_inscricao,
                    u.nome as usuario_nome,
-                   e.titulo as evento_titulo
+                   e.titulo as evento_titulo,
+                   e.data_inicio as data_evento
             FROM certificados c
             INNER JOIN inscricoes i ON c.inscricao_id = i.id
             INNER JOIN usuarios u ON i.usuario_id = u.id
@@ -204,6 +205,34 @@ class Certificado {
         $pdf->MultiCell(0, 10, $texto, 0, 'C');
         $pdf->Output($caminhoArquivo, 'F');
         */
+    }
+
+    public function gerarConteudoCertificado($certificado) {
+        // Os dados já vêm completos do obterPorId
+        if (!isset($certificado['usuario_nome']) || !isset($certificado['evento_titulo'])) {
+            return '';
+        }
+
+        // Gerar conteúdo do certificado em texto
+        $conteudo = "═══════════════════════════════════════════════════════════\n";
+        $conteudo .= "           CERTIFICADO DE PARTICIPAÇÃO\n";
+        $conteudo .= "═══════════════════════════════════════════════════════════\n\n";
+        $conteudo .= "Certificamos que\n\n";
+        $conteudo .= "Usuário: " . $certificado['usuario_nome'] . "\n";
+        $conteudo .= "Evento: " . $certificado['evento_titulo'] . "\n";
+        
+        if (isset($certificado['data_evento'])) {
+            $conteudo .= "Data do Evento: " . date('d/m/Y', strtotime($certificado['data_evento'])) . "\n";
+        }
+        
+        $conteudo .= "Data de Emissão: " . date('d/m/Y', strtotime($certificado['data_emissao'])) . "\n\n";
+        $conteudo .= "Código de Validação: " . $certificado['codigo_validacao'] . "\n\n";
+        $conteudo .= "═══════════════════════════════════════════════════════════\n";
+        $conteudo .= "Este certificado pode ser validado no sistema de eventos\n";
+        $conteudo .= "usando o código de validação acima.\n";
+        $conteudo .= "═══════════════════════════════════════════════════════════\n";
+
+        return $conteudo;
     }
 }
 

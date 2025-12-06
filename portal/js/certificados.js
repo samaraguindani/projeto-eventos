@@ -54,12 +54,54 @@ function criarItemCertificado(certificado, inscricao) {
         <h3>${inscricao.evento_titulo}</h3>
         <p><strong>Código de Validação:</strong> ${certificado.codigo_validacao}</p>
         <p><strong>Data de Emissão:</strong> ${dataEmissao}</p>
-        <div style="margin-top: 15px;">
-            <button onclick="validarCertificadoModal('${certificado.codigo_validacao}')" class="btn btn-primary">Validar Certificado</button>
+        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <button onclick="downloadCertificado(${certificado.id})" class="btn btn-success">
+                📥 Baixar Certificado
+            </button>
+            <button onclick="validarCertificadoModal('${certificado.codigo_validacao}')" class="btn btn-primary">
+                Validar Certificado
+            </button>
         </div>
     `;
     
     return item;
+}
+
+async function downloadCertificado(certificadoId) {
+    try {
+        const token = localStorage.getItem('token');
+        
+        // Fazer download do arquivo
+        const response = await fetch(`${API_CONFIG.CERTIFICADOS}/download/${certificadoId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Erro ao baixar certificado');
+        }
+
+        // Obter o conteúdo do arquivo
+        const texto = await response.text();
+        
+        // Criar blob e fazer download
+        const blob = new Blob([texto], { type: 'text/plain; charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `certificado_${certificadoId}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        mostrarMensagem('Certificado baixado com sucesso!', 'success');
+        
+    } catch (error) {
+        mostrarMensagem(error.message || 'Erro ao baixar certificado', 'error');
+    }
 }
 
 function criarItemCertificadoPendente(inscricao) {

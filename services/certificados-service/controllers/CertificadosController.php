@@ -129,6 +129,58 @@ class CertificadosController {
 
         echo json_encode($certificado);
     }
+
+    public function downloadCertificado($id) {
+        $usuarioId = obterUsuarioIdDoToken();
+        if (!$usuarioId) {
+            http_response_code(401);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['message' => 'Token inválido ou ausente']);
+            return;
+        }
+
+        $certificado = $this->certificadoModel->obterPorId($id);
+
+        if (!$certificado) {
+            http_response_code(404);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['message' => 'Certificado não encontrado']);
+            return;
+        }
+
+        // Verificar se o certificado pertence ao usuário
+        $stmt = $this->db->prepare("
+            SELECT i.usuario_id 
+            FROM inscricoes i 
+            WHERE i.id = :inscricao_id
+        ");
+        $stmt->execute(['inscricao_id' => $certificado['inscricao_id']]);
+        $inscricao = $stmt->fetch();
+
+        if (!$inscricao || $inscricao['usuario_id'] != $usuarioId) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['message' => 'Acesso negado']);
+            return;
+        }
+
+        // Gerar conteúdo do certificado
+        $conteudo = $this->certificadoModel->gerarConteudoCertificado($certificado);
+
+        if (empty($conteudo)) {
+            http_response_code(500);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['message' => 'Erro ao gerar certificado']);
+            return;
+        }
+
+        // Definir headers para download
+        header('Content-Type: text/plain; charset=utf-8');
+        header('Content-Disposition: attachment; filename="certificado_' . $certificado['codigo_validacao'] . '.txt"');
+        header('Access-Control-Allow-Origin: *');
+        
+        echo $conteudo;
+    }
 }
 
 
