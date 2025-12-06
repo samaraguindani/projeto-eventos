@@ -60,24 +60,45 @@ async function buscarParticipante() {
     }
 
     try {
-        const data = await apiRequest(`${API_CONFIG.INSCRICOES}/checkin/buscar`, {
+        const response = await fetch(`${API_CONFIG.INSCRICOES}/checkin/buscar`, {
             method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
             body: JSON.stringify({
-                cpf: cpf, // Enviar com formatação também
+                cpf: cpf,
                 evento_id: parseInt(eventoSelecionado)
             })
         });
 
+        const data = await response.json();
+
+        // Se retornou 404, usuário não encontrado - mostrar cadastro rápido
+        if (response.status === 404) {
+            mostrarFormularioCadastroRapido(cpf);
+            return;
+        }
+
+        // Se não foi 200, lançar erro
+        if (!response.ok) {
+            throw new Error(data.message || 'Erro ao buscar participante');
+        }
+
+        // Se encontrou o usuário
         if (data.encontrado) {
             mostrarDadosParticipante(data);
         } else {
+            // Usuário não encontrado - mostrar formulário de cadastro rápido
             mostrarFormularioCadastroRapido(cpf);
         }
     } catch (error) {
-        // Se der erro 404, mostrar formulário de cadastro
-        if (error.message && error.message.includes('404')) {
+        // Se der qualquer erro de rede ou "não encontrado", mostrar formulário de cadastro
+        if (error.message && (error.message.includes('não encontrado') || error.message.includes('Participante não encontrado') || error.message.includes('404'))) {
             mostrarFormularioCadastroRapido(cpf);
         } else {
+            // Outros erros - mostrar mensagem
+            console.error('Erro ao buscar participante:', error);
             mostrarMensagem(error.message || 'Erro ao buscar participante', 'error');
         }
     }
