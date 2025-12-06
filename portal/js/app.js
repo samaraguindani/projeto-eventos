@@ -8,12 +8,14 @@ function atualizarMenuPorPapel() {
     const linkCertificados = document.getElementById('linkCertificados');
     const linkPerfil = document.getElementById('linkPerfil');
     
-    // Se não tem usuário logado, esconder TODAS as abas
+    // Certificados sempre visível (validação pública)
+    if (linkCertificados) linkCertificados.style.display = 'inline';
+    
+    // Se não tem usuário logado, esconder outras abas
     if (!usuario || !token) {
         if (linkEventos) linkEventos.style.display = 'none';
         if (linkCheckin) linkCheckin.style.display = 'none';
         if (linkInscricoes) linkInscricoes.style.display = 'none';
-        if (linkCertificados) linkCertificados.style.display = 'none';
         if (linkPerfil) linkPerfil.style.display = 'none';
         return;
     }
@@ -24,15 +26,13 @@ function atualizarMenuPorPapel() {
     if (linkPerfil) linkPerfil.style.display = 'inline';
     
     if (usuario.papel === 'admin' || usuario.papel === 'atendente') {
-        // Admin e Atendente: mostrar Check-in, esconder Inscrições e Certificados
+        // Admin e Atendente: mostrar Check-in, esconder Inscrições
         if (linkCheckin) linkCheckin.style.display = 'inline';
         if (linkInscricoes) linkInscricoes.style.display = 'none';
-        if (linkCertificados) linkCertificados.style.display = 'none';
     } else {
-        // Usuário comum: esconder Check-in, mostrar Inscrições e Certificados
+        // Usuário comum: esconder Check-in, mostrar Inscrições
         if (linkCheckin) linkCheckin.style.display = 'none';
         if (linkInscricoes) linkInscricoes.style.display = 'inline';
-        if (linkCertificados) linkCertificados.style.display = 'inline';
     }
 }
 

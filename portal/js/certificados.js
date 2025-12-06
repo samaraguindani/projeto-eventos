@@ -15,6 +15,32 @@ async function emitirCertificado(inscricaoId) {
 
 async function carregarCertificados() {
     const certificadosList = document.getElementById('certificadosList');
+    
+    // Verificar se está logado
+    const token = localStorage.getItem('token');
+    const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+    
+    if (!token || !usuario) {
+        // Usuário não logado - mostrar apenas validação pública
+        certificadosList.innerHTML = `
+            <div class="validacao-publica">
+                <h2>Validar Certificado</h2>
+                <p>Digite o código de validação do certificado para verificar sua autenticidade.</p>
+                <div class="form-group" style="max-width: 400px; margin: 20px auto;">
+                    <label>Código de Validação:</label>
+                    <input type="text" id="codigoValidacaoPublico" class="form-control" 
+                           placeholder="CERT-XXXXXXXX" style="text-transform: uppercase;">
+                    <button onclick="validarCertificadoPublico()" class="btn btn-primary" style="margin-top: 10px; width: 100%;">
+                        Validar Certificado
+                    </button>
+                </div>
+                <div id="resultadoValidacaoPublico" style="margin-top: 20px;"></div>
+            </div>
+        `;
+        return;
+    }
+
+    // Usuário logado - mostrar seus certificados
     certificadosList.innerHTML = '<div class="loading">Carregando certificados...</div>';
 
     // Buscar certificados através das inscrições com presença
@@ -23,7 +49,20 @@ async function carregarCertificados() {
         const inscricoesComPresenca = inscricoes.inscricoes.filter(i => i.presenca_registrada);
         
         if (inscricoesComPresenca.length === 0) {
-            certificadosList.innerHTML = '<p>Você não possui certificados disponíveis.</p>';
+            certificadosList.innerHTML = `
+                <p>Você não possui certificados disponíveis.</p>
+                <hr style="margin: 30px 0;">
+                <h3>Validar Certificado de Outro Participante</h3>
+                <div class="form-group" style="max-width: 400px; margin: 20px auto;">
+                    <label>Código de Validação:</label>
+                    <input type="text" id="codigoValidacaoPublico" class="form-control" 
+                           placeholder="CERT-XXXXXXXX" style="text-transform: uppercase;">
+                    <button onclick="validarCertificadoPublico()" class="btn btn-primary" style="margin-top: 10px; width: 100%;">
+                        Validar Certificado
+                    </button>
+                </div>
+                <div id="resultadoValidacaoPublico" style="margin-top: 20px;"></div>
+            `;
             return;
         }
 
@@ -39,8 +78,66 @@ async function carregarCertificados() {
                 certificadosList.appendChild(criarItemCertificadoPendente(inscricao));
             }
         }
+        
+        // Adicionar seção de validação pública no final
+        const validacaoDiv = document.createElement('div');
+        validacaoDiv.style.marginTop = '40px';
+        validacaoDiv.style.paddingTop = '20px';
+        validacaoDiv.style.borderTop = '2px solid #ddd';
+        validacaoDiv.innerHTML = `
+            <h3>Validar Certificado de Outro Participante</h3>
+            <div class="form-group" style="max-width: 400px; margin: 20px auto;">
+                <label>Código de Validação:</label>
+                <input type="text" id="codigoValidacaoPublico" class="form-control" 
+                       placeholder="CERT-XXXXXXXX" style="text-transform: uppercase;">
+                <button onclick="validarCertificadoPublico()" class="btn btn-primary" style="margin-top: 10px; width: 100%;">
+                    Validar Certificado
+                </button>
+            </div>
+            <div id="resultadoValidacaoPublico" style="margin-top: 20px;"></div>
+        `;
+        certificadosList.appendChild(validacaoDiv);
+        
     } catch (error) {
         certificadosList.innerHTML = `<div class="message error">${error.message}</div>`;
+    }
+}
+
+async function validarCertificadoPublico() {
+    const codigo = document.getElementById('codigoValidacaoPublico').value.trim().toUpperCase();
+    const resultadoDiv = document.getElementById('resultadoValidacaoPublico');
+    
+    if (!codigo) {
+        resultadoDiv.innerHTML = '<div class="message error">Por favor, informe o código de validação</div>';
+        return;
+    }
+
+    try {
+        // Validação pública - não precisa de token
+        const response = await fetch(`${API_CONFIG.CERTIFICADOS}/validar?codigo=${encodeURIComponent(codigo)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        
+        if (response.ok && data.valido) {
+            resultadoDiv.innerHTML = `
+                <div class="message success">
+                    <h4>✓ Certificado Válido!</h4>
+                    <p><strong>Usuário:</strong> ${data.data.usuario_nome}</p>
+                    <p><strong>Evento:</strong> ${data.data.evento_titulo}</p>
+                    <p><strong>Data do Evento:</strong> ${new Date(data.data.data_evento).toLocaleDateString('pt-BR')}</p>
+                    <p><strong>Data de Emissão:</strong> ${new Date(data.data.data_emissao).toLocaleDateString('pt-BR')}</p>
+                </div>
+            `;
+        } else {
+            resultadoDiv.innerHTML = '<div class="message error">Certificado inválido ou não encontrado</div>';
+        }
+    } catch (error) {
+        resultadoDiv.innerHTML = `<div class="message error">Erro ao validar certificado: ${error.message}</div>`;
     }
 }
 
