@@ -135,9 +135,9 @@ function mostrarDadosParticipante(data) {
             <div class="alert alert-warning">
                 <strong>⚠ Participante não inscrito neste evento</strong>
             </div>
-            <p>Deseja fazer o cadastro e check-in agora?</p>
-            <button onclick="mostrarFormularioCadastroRapido('${data.usuario.cpf}')" class="btn btn-primary">
-                Fazer Cadastro e Check-in
+            <p>O participante será inscrito automaticamente e o check-in será registrado.</p>
+            <button onclick="confirmarCheckin('${data.usuario.cpf}')" class="btn btn-success btn-lg">
+                Inscrever e Fazer Check-in
             </button>
         `;
     }
@@ -189,7 +189,7 @@ function mostrarFormularioCadastroRapido(cpf) {
 }
 
 async function confirmarCheckin(cpf) {
-    if (!confirm('Confirmar check-in do participante?')) {
+    if (!confirm('Confirmar check-in do participante?\n\nSe não estiver inscrito, a inscrição será criada automaticamente.')) {
         return;
     }
 
@@ -202,7 +202,12 @@ async function confirmarCheckin(cpf) {
             })
         });
 
-        mostrarMensagem('Check-in realizado com sucesso!', 'success');
+        if (data.inscricao_criada) {
+            mostrarMensagem('Inscrição criada e check-in realizado com sucesso!', 'success');
+        } else {
+            mostrarMensagem('Check-in realizado com sucesso!', 'success');
+        }
+        
         limparBusca();
         
     } catch (error) {

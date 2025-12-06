@@ -88,12 +88,25 @@ class CheckinController {
         }
 
         try {
-            // Buscar usuário
-            $stmt = $this->db->prepare("SELECT id FROM usuarios WHERE cpf = :cpf");
-            $stmt->execute(['cpf' => $data['cpf']]);
+            $this->db->beginTransaction();
+
+            // Limpar CPF (remover pontos e hífen)
+            $cpfLimpo = preg_replace('/[^0-9]/', '', $data['cpf']);
+            
+            // Buscar usuário por CPF
+            $stmt = $this->db->prepare("
+                SELECT id FROM usuarios 
+                WHERE REPLACE(REPLACE(cpf, '.', ''), '-', '') = :cpf_limpo
+                   OR cpf = :cpf_formatado
+            ");
+            $stmt->execute([
+                'cpf_limpo' => $cpfLimpo,
+                'cpf_formatado' => $data['cpf']
+            ]);
             $usuario = $stmt->fetch();
 
             if (!$usuario) {
+                $this->db->rollBack();
                 http_response_code(404);
                 echo json_encode(['message' => 'Usuário não encontrado']);
                 return;
@@ -111,36 +124,95 @@ class CheckinController {
             ]);
             $inscricao = $stmt->fetch();
 
+            // Se não tem inscrição, criar automaticamente
+            $inscricaoCriada = false;
             if (!$inscricao) {
-                http_response_code(404);
-                echo json_encode(['message' => 'Inscrição não encontrada']);
-                return;
+                // Verificar se o evento existe e tem vagas
+                $stmt = $this->db->prepare("
+                    SELECT id, vagas_disponiveis FROM eventos WHERE id = :evento_id
+                ");
+                $stmt->execute(['evento_id' => $data['evento_id']]);
+                $evento = $stmt->fetch();
+                
+                if (!$evento) {
+                    $this->db->rollBack();
+                    http_response_code(404);
+                    echo json_encode(['message' => 'Evento não encontrado']);
+                    return;
+                }
+
+                if ($evento['vagas_disponiveis'] <= 0) {
+                    $this->db->rollBack();
+                    http_response_code(400);
+                    echo json_encode(['message' => 'Não há vagas disponíveis para este evento']);
+                    return;
+                }
+
+                // Criar inscrição automaticamente com presença já registrada
+                $codigoInscricao = 'INS-' . date('YmdHis') . '-' . str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
+                
+                $stmt = $this->db->prepare("
+                    INSERT INTO inscricoes (usuario_id, evento_id, codigo_inscricao, status, data_inscricao, presenca_registrada, data_presenca)
+                    VALUES (:usuario_id, :evento_id, :codigo_inscricao, 'ativa', CURRENT_TIMESTAMP, TRUE, CURRENT_TIMESTAMP)
+                    RETURNING id, codigo_inscricao
+                ");
+                $stmt->execute([
+                    'usuario_id' => $usuario['id'],
+                    'evento_id' => $data['evento_id'],
+                    'codigo_inscricao' => $codigoInscricao
+                ]);
+                $inscricao = $stmt->fetch();
+                $inscricaoCriada = true;
+                
+                // Enviar email de inscrição
+                EmailService::adicionarFila('inscricao', $usuario['id'], $data['evento_id'], [
+                    'codigo_inscricao' => $codigoInscricao
+                ]);
+            } else {
+                // Já tem inscrição - verificar se presença já foi registrada
+                if ($inscricao['presenca_registrada']) {
+                    $this->db->rollBack();
+                    http_response_code(400);
+                    echo json_encode(['message' => 'Presença já foi registrada']);
+                    return;
+                }
+
+                // Registrar presença
+                $resultado = $this->inscricaoModel->registrarPresenca($inscricao['codigo_inscricao']);
+                
+                if (!$resultado) {
+                    $this->db->rollBack();
+                    http_response_code(400);
+                    echo json_encode(['message' => 'Erro ao registrar presença']);
+                    return;
+                }
             }
 
-            if ($inscricao['presenca_registrada']) {
-                http_response_code(400);
-                echo json_encode(['message' => 'Presença já foi registrada']);
-                return;
-            }
+            $this->db->commit();
 
-            // Registrar presença
-            $resultado = $this->inscricaoModel->registrarPresenca($inscricao['codigo_inscricao']);
-
-            if (!$resultado) {
-                http_response_code(400);
-                echo json_encode(['message' => 'Erro ao registrar presença']);
-                return;
-            }
-
-            // Enviar email
+            // Enviar email de check-in
             EmailService::adicionarFila('checkin', $usuario['id'], $data['evento_id']);
 
+            // Buscar dados completos da inscrição para retornar
+            $stmt = $this->db->prepare("
+                SELECT i.*, e.titulo as evento_titulo
+                FROM inscricoes i
+                INNER JOIN eventos e ON i.evento_id = e.id
+                WHERE i.id = :inscricao_id
+            ");
+            $stmt->execute(['inscricao_id' => $inscricao['id']]);
+            $inscricaoCompleta = $stmt->fetch();
+
             echo json_encode([
-                'message' => 'Presença registrada com sucesso!',
-                'data' => $resultado
+                'message' => $inscricaoCriada ? 
+                    'Inscrição criada e check-in realizados com sucesso!' : 
+                    'Check-in realizado com sucesso!',
+                'inscricao_criada' => $inscricaoCriada,
+                'data' => $inscricaoCompleta
             ]);
 
         } catch (PDOException $e) {
+            $this->db->rollBack();
             http_response_code(500);
             echo json_encode(['message' => 'Erro ao registrar presença: ' . $e->getMessage()]);
         }

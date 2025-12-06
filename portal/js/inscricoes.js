@@ -27,6 +27,31 @@ function criarItemInscricao(inscricao) {
     const dataInscricao = new Date(inscricao.data_inscricao).toLocaleDateString('pt-BR');
     const dataEvento = new Date(inscricao.data_inicio).toLocaleDateString('pt-BR');
     
+    // Verificar se é admin ou atendente
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const isAdminOuAtendente = usuario && (usuario.papel === 'admin' || usuario.papel === 'atendente');
+    
+    let botoesHtml = '';
+    
+    if (inscricao.status === 'ativa') {
+        if (inscricao.presenca_registrada) {
+            // Presença já registrada - mostrar botão de certificado
+            botoesHtml = `<button onclick="emitirCertificado(${inscricao.id})" class="btn btn-primary">Emitir Certificado</button>`;
+        } else {
+            // Presença não registrada
+            if (isAdminOuAtendente) {
+                // Admin/Atendente pode registrar presença
+                botoesHtml = `
+                    <button onclick="registrarPresenca('${inscricao.codigo_inscricao}')" class="btn btn-success">Registrar Presença</button>
+                    <button onclick="cancelarInscricao(${inscricao.id})" class="btn btn-danger">Cancelar</button>
+                `;
+            } else {
+                // Usuário comum - apenas cancelar
+                botoesHtml = `<button onclick="cancelarInscricao(${inscricao.id})" class="btn btn-danger">Cancelar</button>`;
+            }
+        }
+    }
+    
     item.innerHTML = `
         <div class="info">
             <h3>${inscricao.evento_titulo}</h3>
@@ -37,13 +62,7 @@ function criarItemInscricao(inscricao) {
             ${inscricao.presenca_registrada ? '<p style="color: green;"><strong>✓ Presença Registrada</strong></p>' : ''}
         </div>
         <div class="actions">
-            ${inscricao.status === 'ativa' && !inscricao.presenca_registrada ? 
-                `<button onclick="registrarPresenca('${inscricao.codigo_inscricao}')" class="btn btn-success">Registrar Presença</button>
-                 <button onclick="cancelarInscricao(${inscricao.id})" class="btn btn-danger">Cancelar</button>` : 
-                ''}
-            ${inscricao.presenca_registrada ? 
-                `<button onclick="emitirCertificado(${inscricao.id})" class="btn btn-primary">Emitir Certificado</button>` : 
-                ''}
+            ${botoesHtml}
         </div>
     `;
     
