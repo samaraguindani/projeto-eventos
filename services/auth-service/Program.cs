@@ -4,12 +4,13 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using ProjetoEventosAuth.Data;
 using ProjetoEventosAuth.Middleware;
+using ProjetoEventosAuth.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configuração do banco de dados
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Host=localhost;Port=5432;Database=eventos_db;Username=postgres;Password=postgres";
+    ?? "Host=177.44.248.102;Port=5433;Database=eventos_db;Username=eventos;Password=eventos123";
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -81,6 +82,8 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+
+builder.Services.AddScoped<UsuarioService>();
 
 var app = builder.Build();
 

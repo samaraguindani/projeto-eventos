@@ -14,3 +14,7 @@ $service = new EmailQueueService($db);
 // Processar até 50 emails por execução
 $service->processarFila(50);
 
+
+
+
+

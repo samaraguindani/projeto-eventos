@@ -17,3 +17,7 @@ public class Evento
     public DateTime UpdatedAt { get; set; }
 }
 
+
+
+
+

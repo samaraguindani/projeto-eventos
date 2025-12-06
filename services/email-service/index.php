@@ -31,3 +31,7 @@ if ($path === '/processar' && $method === 'POST') {
     echo json_encode(['message' => 'Endpoint não encontrado']);
 }
 
+
+
+
+

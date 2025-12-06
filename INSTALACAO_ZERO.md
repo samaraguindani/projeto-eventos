@@ -211,7 +211,7 @@ ls -la | grep -E "(services|portal|database)"
 
 ## 9. Configurar Banco de Dados
 
-### 9.1. Criar Banco de Dados
+### 9.1. Criar Banco de Dados e Configurar Senha
 
 ```bash
 # Acessar PostgreSQL
@@ -225,10 +225,21 @@ ALTER USER postgres WITH PASSWORD 'postgres';
 \q
 ```
 
-**Ou em um comando:**
+**⚠️ CRÍTICO:** A senha do usuário `postgres` DEVE ser exatamente `postgres` (sem aspas) para os serviços funcionarem!
+
+**Ou em comandos únicos:**
 
 ```bash
+# Criar banco
 sudo -u postgres psql -c "CREATE DATABASE eventos_db;"
+
+# Configurar senha (MUITO IMPORTANTE - deve ser 'postgres')
+sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+```
+
+**Se já criou o banco mas não configurou a senha, execute apenas:**
+
+```bash
 sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
 ```
 
@@ -248,11 +259,13 @@ sudo -u postgres psql -l | grep eventos_db
 # Certifique-se de estar no diretório do projeto
 cd ~/projeto-eventos
 
-# Executar schema SQL
+# Executar schema SQL (use sudo -u postgres para autenticação)
 sudo -u postgres psql -d eventos_db -f database/schema.sql
 ```
 
 ✅ **Deve mostrar mensagens de criação de tabelas**
+
+**⚠️ IMPORTANTE:** Sempre use `sudo -u postgres` antes do comando `psql` para evitar erro de autenticação "Peer authentication failed"!
 
 ### 10.1. Verificar Tabelas Criadas
 

@@ -7,8 +7,8 @@
 # Criar banco (se ainda não existir)
 sudo -u postgres psql -c "CREATE DATABASE eventos_db;" || true
 
-# Executar schema
-psql -U postgres -d eventos_db -f database/schema.sql
+# Executar schema (use sudo -u postgres)
+sudo -u postgres psql -d eventos_db -f database/schema.sql
 ```
 
 **Configuração do PostgreSQL na VM:**

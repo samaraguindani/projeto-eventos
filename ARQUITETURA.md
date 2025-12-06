@@ -254,3 +254,7 @@ Portal (online) → Sincronização → Inscrições Service → PostgreSQL
 - Nginx como reverse proxy
 - PostgreSQL como serviço do sistema
 
+
+
+
+

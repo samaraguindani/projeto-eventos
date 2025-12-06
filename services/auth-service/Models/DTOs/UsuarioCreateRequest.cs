@@ -21,3 +21,7 @@ public class UsuarioCreateRequest
     public DateTime? DataNascimento { get; set; }
 }
 
+
+
+
+

@@ -51,3 +51,7 @@ function obterUsuarioIdDoToken() {
     return (int)$decoded['userId'];
 }
 
+
+
+
+

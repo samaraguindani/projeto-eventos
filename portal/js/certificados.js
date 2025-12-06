@@ -120,3 +120,7 @@ async function validarCertificado() {
     }
 }
 
+
+
+
+

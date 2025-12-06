@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using ProjetoEventosAuth.Data;
 using System.Security.Claims;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ProjetoEventosAuth.Middleware;
 
@@ -16,7 +17,7 @@ public class RequestLoggingMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, ApplicationDbContext dbContext)
+    public async Task InvokeAsync(HttpContext context, IServiceProvider serviceProvider)
     {
         var stopwatch = Stopwatch.StartNew();
         var originalBodyStream = context.Response.Body;
@@ -41,6 +42,14 @@ public class RequestLoggingMiddleware
         var responseBodyContent = await GetResponseBodyAsync(responseBody);
         await responseBody.CopyToAsync(originalBodyStream);
 
+        // Capturar valores antes de entrar no Task.Run (para evitar usar context descartado)
+        var metodo = context.Request.Method;
+        var url = context.Request.Path + context.Request.QueryString;
+        var ip = context.Connection.RemoteIpAddress?.ToString();
+        var userAgent = context.Request.Headers["User-Agent"].ToString();
+        var statusCode = context.Response.StatusCode;
+        var responseTime = (int)stopwatch.ElapsedMilliseconds;
+
         // Obter userId do token JWT se disponível
         int? userId = null;
         var userIdClaim = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -54,16 +63,20 @@ public class RequestLoggingMiddleware
         {
             try
             {
+                // Criar novo escopo para obter novo contexto do banco
+                using var scope = serviceProvider.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
                 var log = new ProjetoEventosAuth.Models.Log
                 {
                     Timestamp = DateTime.UtcNow,
-                    Metodo = context.Request.Method,
-                    Url = context.Request.Path + context.Request.QueryString,
-                    Ip = context.Connection.RemoteIpAddress?.ToString(),
-                    UserAgent = context.Request.Headers["User-Agent"].ToString(),
-                    StatusCode = context.Response.StatusCode,
+                    Metodo = metodo,
+                    Url = url,
+                    Ip = ip,
+                    UserAgent = userAgent,
+                    StatusCode = statusCode,
                     UserId = userId,
-                    ResponseTime = (int)stopwatch.ElapsedMilliseconds,
+                    ResponseTime = responseTime,
                     RequestBody = requestBody,
                     ResponseBody = responseBodyContent?.Length > 10000 ? "Response too large" : responseBodyContent
                 };
@@ -86,4 +99,5 @@ public class RequestLoggingMiddleware
         return text;
     }
 }
+
 

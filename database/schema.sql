@@ -255,3 +255,7 @@ LEFT JOIN inscricoes i ON e.id = i.evento_id
 LEFT JOIN certificados c ON i.id = c.inscricao_id
 GROUP BY e.id, e.titulo, e.capacidade_maxima, e.vagas_disponiveis;
 
+
+
+
+

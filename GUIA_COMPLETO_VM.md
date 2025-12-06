@@ -86,40 +86,47 @@ sudo mv composer.phar /usr/local/bin/composer
 
 ## 🗄️ PASSO 3: Configurar Banco de Dados
 
-### 3.1. Criar Banco de Dados
+### 3.1. Criar Banco de Dados e Configurar Senha
 
 ```bash
 # Acessar PostgreSQL
 sudo -u postgres psql
 
-# No prompt do PostgreSQL, executar:
+# No prompt do PostgreSQL (postgres=#), executar:
 CREATE DATABASE eventos_db;
-
-# Configurar senha do usuário postgres (se necessário)
 ALTER USER postgres WITH PASSWORD 'postgres';
 
 # Sair do PostgreSQL
 \q
 ```
 
+**⚠️ IMPORTANTE:** A senha do usuário `postgres` DEVE ser `postgres` (sem aspas) para funcionar com os serviços!
+
+**Ou em comandos únicos:**
+
+```bash
+# Criar banco
+sudo -u postgres psql -c "CREATE DATABASE eventos_db;"
+
+# Configurar senha (CRÍTICO - deve ser 'postgres')
+sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+```
+
 ### 3.2. Verificar Conexão
 
 ```bash
-# Testar conexão (método 1 - direto)
-psql -U postgres -d eventos_db -c "SELECT version();"
+# Testar conexão com senha
+PGPASSWORD=postgres psql -U postgres -d eventos_db -c "SELECT version();"
 
-# Se der erro de permissão, use sudo (método 2)
+# Ou use sudo (sem precisar de senha)
 sudo -u postgres psql -d eventos_db -c "SELECT version();"
-
-# Ou entre no psql interativo (método 3)
-sudo -u postgres psql eventos_db
-# Depois digite: SELECT version();
-# Para sair: \q
 ```
 
 ✅ **Deve retornar a versão do PostgreSQL**
 
-**⚠️ IMPORTANTE:** Use `psql` (não `sql`) - é o cliente PostgreSQL!
+**⚠️ IMPORTANTE:** 
+- Use `psql` (não `sql`) - é o cliente PostgreSQL!
+- A senha do usuário `postgres` DEVE ser `postgres` para os serviços funcionarem!
 
 ---
 
@@ -247,11 +254,13 @@ git status
 # Certifique-se de estar no diretório do projeto
 cd ~/projeto-eventos
 
-# Executar schema
-psql -U postgres -d eventos_db -f database/schema.sql
+# Executar schema (use sudo -u postgres para autenticação)
+sudo -u postgres psql -d eventos_db -f database/schema.sql
 ```
 
 ✅ **Deve mostrar mensagens de criação de tabelas**
+
+**⚠️ IMPORTANTE:** Use `sudo -u postgres` antes do comando `psql` para evitar erro de autenticação!
 
 ### 5.1. Verificar Tabelas Criadas
 

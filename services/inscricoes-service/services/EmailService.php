@@ -5,11 +5,11 @@ class EmailService {
 
     public static function getDb() {
         if (!self::$db) {
-            $host = getenv('DB_HOST') ?: 'localhost';
-            $port = getenv('DB_PORT') ?: '5432';
+            $host = getenv('DB_HOST') ?: '177.44.248.102';
+            $port = getenv('DB_PORT') ?: '5433';
             $dbname = getenv('DB_NAME') ?: 'eventos_db';
-            $username = getenv('DB_USER') ?: 'postgres';
-            $password = getenv('DB_PASSWORD') ?: 'postgres';
+            $username = getenv('DB_USER') ?: 'eventos';
+            $password = getenv('DB_PASSWORD') ?: 'eventos123';
             
             $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
             self::$db = new PDO($dsn, $username, $password);
@@ -111,4 +111,5 @@ class EmailService {
         return $html;
     }
 }
+
 

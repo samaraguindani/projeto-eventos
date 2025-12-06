@@ -267,3 +267,7 @@ tar -xzf ~/backup_projeto-eventos.tar.gz -C ~/
 
 **✅ Limpeza concluída! VM pronta para começar do zero!**
 
+
+
+
+

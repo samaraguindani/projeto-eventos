@@ -1,18 +1,10 @@
 // Configuração da API
-// Para desenvolvimento local, use: 'http://localhost:PORTA'
-// Para acessar a VM, use: 'http://177.44.248.102:PORTA'
-const VM_HOST = '177.44.248.102'; // IP da VM
-const LOCAL_HOST = 'localhost'; // Para desenvolvimento local
-
-// Escolha qual usar (descomente a linha desejada):
-const HOST = VM_HOST; // Para acessar a VM
-// const HOST = LOCAL_HOST; // Para desenvolvimento local
-
+// Serviços rodam localmente, banco de dados está na VM
 const API_CONFIG = {
-    AUTH: `http://${HOST}:5001/api`,
-    EVENTOS: `http://${HOST}:5002/api`,
-    INSCRICOES: `http://${HOST}:8001/api/inscricoes`,
-    CERTIFICADOS: `http://${HOST}:8002/api/certificados`
+    AUTH: 'http://localhost:5001/api',
+    EVENTOS: 'http://localhost:5002/api',
+    INSCRICOES: 'http://localhost:8001/api/inscricoes',
+    CERTIFICADOS: 'http://localhost:8002/api/certificados'
 };
 
 // Função para fazer requisições HTTP

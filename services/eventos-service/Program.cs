@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configuração do banco de dados
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Host=localhost;Port=5432;Database=eventos_db;Username=postgres;Password=postgres";
+    ?? "Host=177.44.248.102;Port=5433;Database=eventos_db;Username=eventos;Password=eventos123";
 
 builder.Services.AddDbContext<EventosDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -42,7 +42,25 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "Eventos Service API", Version = "v1" });
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
+    { 
+        Title = "Eventos Service API", 
+        Version = "v1",
+        Description = "API para gestão de eventos do sistema",
+        Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        {
+            Name = "Sistema de Eventos",
+            Email = "contato@eventos.com"
+        }
+    });
+    
+    // Incluir comentários XML
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
     
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
@@ -81,17 +99,27 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+// Habilitar Swagger em todos os ambientes (incluindo Production local)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Eventos Service API v1");
+    c.RoutePrefix = "swagger"; // Acesso: http://localhost:5002/swagger
+    c.DocumentTitle = "Eventos Service - API Documentation";
+});
 
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+Console.WriteLine("========================================");
+Console.WriteLine("  EVENTOS SERVICE INICIADO");
+Console.WriteLine("========================================");
+Console.WriteLine($"API: http://localhost:5002");
+Console.WriteLine($"Swagger: http://localhost:5002/swagger");
+Console.WriteLine("========================================");
 
 app.Run("http://localhost:5002");
 
