@@ -58,6 +58,11 @@ function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
     mostrarConteudoNaoAutenticado();
+    
+    // Atualizar menu para esconder todas as abas
+    if (typeof atualizarMenuPorPapel === 'function') {
+        atualizarMenuPorPapel();
+    }
 }
 
 function switchTab(tab) {
@@ -86,6 +91,11 @@ function mostrarConteudoAutenticado() {
     document.getElementById('userInfo').textContent = `Olá, ${usuario.nome || 'Usuário'}`;
     document.getElementById('logoutBtn').style.display = 'inline-block';
     
+    // Atualizar menu baseado no papel do usuário
+    if (typeof atualizarMenuPorPapel === 'function') {
+        atualizarMenuPorPapel();
+    }
+    
     carregarEventos();
 }
 
@@ -94,6 +104,15 @@ function mostrarConteudoNaoAutenticado() {
     document.getElementById('authSection').classList.add('active');
     document.getElementById('userInfo').textContent = '';
     document.getElementById('logoutBtn').style.display = 'none';
+    
+    // Esconder todas as abas quando não está logado
+    const linkInscricoes = document.getElementById('linkInscricoes');
+    const linkCertificados = document.getElementById('linkCertificados');
+    const linkCheckin = document.getElementById('linkCheckin');
+    
+    if (linkInscricoes) linkInscricoes.style.display = 'none';
+    if (linkCertificados) linkCertificados.style.display = 'none';
+    if (linkCheckin) linkCheckin.style.display = 'none';
 }
 
 function mostrarMensagem(mensagem, tipo = 'info') {

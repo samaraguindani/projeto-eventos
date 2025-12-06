@@ -64,6 +64,32 @@ async function mostrarDetalhesEvento(evento) {
     const dataFim = new Date(evento.data_fim).toLocaleString('pt-BR');
     const numeroParticipantes = evento.numero_participantes || 0;
     
+    // Verificar se é admin ou atendente
+    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    const isAdminOuAtendente = usuario && (usuario.papel === 'admin' || usuario.papel === 'atendente');
+    
+    let botoesHtml = '';
+    if (isAdminOuAtendente) {
+        // Botões para Admin/Atendente
+        botoesHtml = `
+            <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button onclick="abrirCheckinEvento(${evento.id}, '${evento.titulo.replace(/'/g, "\\'")}')" class="btn btn-success">
+                    Check-in de Participante
+                </button>
+                <button onclick="abrirInscricaoRapidaEvento(${evento.id}, '${evento.titulo.replace(/'/g, "\\'")}')" class="btn btn-primary">
+                    Inscrever Participante
+                </button>
+            </div>
+        `;
+    } else {
+        // Botão para usuário comum
+        botoesHtml = `
+            <div style="margin-top: 20px;">
+                <button onclick="inscreverNoEvento(${evento.id})" class="btn btn-primary">Inscrever-se</button>
+            </div>
+        `;
+    }
+    
     detalhesDiv.innerHTML = `
         <div class="evento-card">
             <h2>${evento.titulo}</h2>
@@ -76,11 +102,44 @@ async function mostrarDetalhesEvento(evento) {
             <div class="evento-info"><strong>Vagas Disponíveis:</strong> ${evento.vagas_disponiveis || 0}</div>
             <div class="evento-info"><strong>Valor:</strong> R$ ${parseFloat(evento.valor_inscricao || 0).toFixed(2)}</div>
             <div class="evento-info"><strong>Categoria:</strong> ${evento.categoria || 'Sem categoria'}</div>
-            <div style="margin-top: 20px;">
-                <button onclick="inscreverNoEvento(${evento.id})" class="btn btn-primary">Inscrever-se</button>
-            </div>
+            ${botoesHtml}
         </div>
     `;
+}
+
+// Funções auxiliares para admin/atendente
+function abrirCheckinEvento(eventoId, eventoTitulo) {
+    // Ir para seção de check-in
+    showSection('checkin');
+    
+    // Selecionar o evento automaticamente
+    setTimeout(() => {
+        const select = document.getElementById('eventoCheckin');
+        if (select) {
+            select.value = eventoId;
+            selecionarEvento();
+            document.getElementById('cpfInput').focus();
+        }
+    }, 200);
+}
+
+function abrirInscricaoRapidaEvento(eventoId, eventoTitulo) {
+    // Ir para seção de check-in
+    showSection('checkin');
+    
+    // Selecionar o evento e mostrar formulário de cadastro rápido
+    setTimeout(() => {
+        const select = document.getElementById('eventoCheckin');
+        if (select) {
+            select.value = eventoId;
+            selecionarEvento();
+        }
+        
+        // Mostrar formulário de cadastro rápido diretamente
+        setTimeout(() => {
+            mostrarFormularioCadastroRapido('');
+        }, 100);
+    }, 200);
 }
 
 function filtrarEventos() {

@@ -27,6 +27,8 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Cpf).HasColumnName("cpf").HasMaxLength(14);
             entity.Property(e => e.Telefone).HasColumnName("telefone").HasMaxLength(20);
             entity.Property(e => e.DataNascimento).HasColumnName("data_nascimento");
+            entity.Property(e => e.Papel).HasColumnName("papel").HasMaxLength(20).HasDefaultValue("usuario");
+            entity.Property(e => e.CadastroCompleto).HasColumnName("cadastro_completo").HasDefaultValue(true);
             entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.Ativo).HasColumnName("ativo").HasDefaultValue(true);

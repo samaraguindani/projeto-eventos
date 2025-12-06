@@ -47,7 +47,12 @@ public class AuthController : ControllerBase
             {
                 id = usuario.Id,
                 nome = usuario.Nome,
-                email = usuario.Email
+                email = usuario.Email,
+                cpf = usuario.Cpf,
+                telefone = usuario.Telefone,
+                data_nascimento = usuario.DataNascimento,
+                papel = usuario.Papel,
+                cadastro_completo = usuario.CadastroCompleto
             }
         });
     }
@@ -77,7 +82,12 @@ public class AuthController : ControllerBase
             {
                 id = usuario.Id,
                 nome = usuario.Nome,
-                email = usuario.Email
+                email = usuario.Email,
+                cpf = usuario.Cpf,
+                telefone = usuario.Telefone,
+                data_nascimento = usuario.DataNascimento,
+                papel = usuario.Papel,
+                cadastro_completo = usuario.CadastroCompleto
             }
         });
     }
@@ -107,7 +117,9 @@ public class AuthController : ControllerBase
             email = usuario.Email,
             cpf = usuario.Cpf,
             telefone = usuario.Telefone,
-            dataNascimento = usuario.DataNascimento
+            data_nascimento = usuario.DataNascimento,
+            papel = usuario.Papel,
+            cadastro_completo = usuario.CadastroCompleto
         });
     }
 

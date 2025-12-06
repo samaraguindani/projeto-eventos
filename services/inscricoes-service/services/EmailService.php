@@ -73,6 +73,8 @@ class EmailService {
                 return "Check-in Realizado - " . $evento['titulo'];
             case 'certificado':
                 return "Seu Certificado - " . $evento['titulo'];
+            case 'cadastro_rapido':
+                return "Bem-vindo! Complete seu cadastro - " . $evento['titulo'];
             default:
                 return "Notificação de Evento";
         }
@@ -103,6 +105,21 @@ class EmailService {
                 if (isset($dadosExtras['codigo_validacao'])) {
                     $html .= "<p><strong>Código de Validação:</strong> " . htmlspecialchars($dadosExtras['codigo_validacao']) . "</p>";
                 }
+                break;
+            case 'cadastro_rapido':
+                $html .= "<p>Bem-vindo ao evento <strong>" . htmlspecialchars($evento['titulo']) . "</strong>!</p>";
+                $html .= "<p>Seu cadastro e check-in foram realizados com sucesso na portaria do evento.</p>";
+                $html .= "<p><strong>Importante:</strong> Complete seu cadastro para ter acesso total ao sistema.</p>";
+                $html .= "<hr>";
+                $html .= "<h3>Dados de Acesso Temporários:</h3>";
+                $html .= "<p><strong>Email:</strong> " . htmlspecialchars($usuario['email']) . "</p>";
+                if (isset($dadosExtras['senha_temporaria'])) {
+                    $html .= "<p><strong>Senha Temporária:</strong> " . htmlspecialchars($dadosExtras['senha_temporaria']) . "</p>";
+                }
+                if (isset($dadosExtras['codigo_inscricao'])) {
+                    $html .= "<p><strong>Código de Inscrição:</strong> " . htmlspecialchars($dadosExtras['codigo_inscricao']) . "</p>";
+                }
+                $html .= "<p><a href='http://localhost:8080' style='background: #667eea; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;'>Acessar Sistema</a></p>";
                 break;
         }
         

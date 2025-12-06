@@ -9,6 +9,8 @@ public class Usuario
     public string? Cpf { get; set; }
     public string? Telefone { get; set; }
     public DateTime? DataNascimento { get; set; }
+    public string Papel { get; set; } = "usuario"; // usuario, atendente, admin
+    public bool CadastroCompleto { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public bool Ativo { get; set; } = true;

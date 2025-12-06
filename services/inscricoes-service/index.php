@@ -13,9 +13,11 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/jwt.php';
 require_once __DIR__ . '/models/Inscricao.php';
 require_once __DIR__ . '/controllers/InscricoesController.php';
+require_once __DIR__ . '/controllers/CheckinController.php';
 
 $db = getDatabaseConnection();
 $controller = new InscricoesController($db);
+$checkinController = new CheckinController($db);
 
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -51,6 +53,12 @@ if ($path === '' || $path === '/') {
     $controller->sincronizarPresencas();
 } elseif ($path === '/cancelar/sincronizar' && $method === 'POST') {
     $controller->sincronizarCancelamentos();
+} elseif ($path === '/checkin/buscar' && $method === 'POST') {
+    $checkinController->buscarPorCpf();
+} elseif ($path === '/checkin/registrar' && $method === 'POST') {
+    $checkinController->registrarPresencaPorCpf();
+} elseif ($path === '/checkin/cadastro-rapido' && $method === 'POST') {
+    $checkinController->cadastroRapido();
 } else {
     http_response_code(404);
     echo json_encode(['message' => 'Endpoint não encontrado']);

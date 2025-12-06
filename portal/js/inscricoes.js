@@ -25,7 +25,7 @@ function criarItemInscricao(inscricao) {
     item.className = 'inscricao-item';
     
     const dataInscricao = new Date(inscricao.data_inscricao).toLocaleDateString('pt-BR');
-    const dataEvento = new Date(inscricao.evento_data_inicio).toLocaleDateString('pt-BR');
+    const dataEvento = new Date(inscricao.data_inicio).toLocaleDateString('pt-BR');
     
     item.innerHTML = `
         <div class="info">
@@ -108,6 +108,14 @@ function showSection(section) {
         case 'certificados':
             document.getElementById('certificadosSection').classList.add('active');
             carregarCertificados();
+            break;
+        case 'checkin':
+            document.getElementById('checkinSection').classList.add('active');
+            carregarEventosParaCheckin();
+            break;
+        case 'perfil':
+            document.getElementById('perfilSection').classList.add('active');
+            carregarPerfil();
             break;
     }
 }
