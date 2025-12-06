@@ -101,6 +101,34 @@ class CertificadosController {
 
         echo json_encode($certificado);
     }
+
+    public function obterCertificadoPorInscricao($inscricaoId) {
+        $usuarioId = obterUsuarioIdDoToken();
+        if (!$usuarioId) {
+            http_response_code(401);
+            echo json_encode(['message' => 'Token inválido ou ausente']);
+            return;
+        }
+
+        // Verificar se a inscrição pertence ao usuário
+        $stmt = $this->db->prepare("SELECT id FROM inscricoes WHERE id = :id AND usuario_id = :usuario_id");
+        $stmt->execute(['id' => $inscricaoId, 'usuario_id' => $usuarioId]);
+        if (!$stmt->fetch()) {
+            http_response_code(404);
+            echo json_encode(['message' => 'Inscrição não encontrada']);
+            return;
+        }
+
+        $certificado = $this->certificadoModel->obterPorInscricaoId($inscricaoId);
+
+        if (!$certificado) {
+            http_response_code(404);
+            echo json_encode(['message' => 'Certificado não encontrado']);
+            return;
+        }
+
+        echo json_encode($certificado);
+    }
 }
 
 

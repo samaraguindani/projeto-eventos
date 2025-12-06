@@ -31,8 +31,8 @@ async function carregarCertificados() {
         
         for (const inscricao of inscricoesComPresenca) {
             try {
-                // Tentar buscar certificado
-                const certificado = await apiRequest(`${API_CONFIG.CERTIFICADOS}/${inscricao.id}`);
+                // Tentar buscar certificado usando o ID da inscrição
+                const certificado = await apiRequest(`${API_CONFIG.CERTIFICADOS}/inscricao/${inscricao.id}`);
                 certificadosList.appendChild(criarItemCertificado(certificado, inscricao));
             } catch (error) {
                 // Certificado ainda não emitido

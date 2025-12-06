@@ -26,6 +26,9 @@ if ($path === '/emitir' && $method === 'POST') {
     $controller->emitirCertificado();
 } elseif ($path === '/validar' && $method === 'GET') {
     $controller->validarCertificado();
+} elseif (preg_match('/^\/inscricao\/(\d+)$/', $path, $matches) && $method === 'GET') {
+    $inscricaoId = (int)$matches[1];
+    $controller->obterCertificadoPorInscricao($inscricaoId);
 } elseif (preg_match('/^\/(\d+)$/', $path, $matches) && $method === 'GET') {
     $id = (int)$matches[1];
     $controller->obterCertificado($id);

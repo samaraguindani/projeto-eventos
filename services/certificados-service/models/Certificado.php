@@ -126,6 +126,21 @@ class Certificado {
         return $stmt->fetch();
     }
 
+    public function obterPorInscricaoId($inscricaoId) {
+        $stmt = $this->db->prepare("
+            SELECT c.*, i.codigo_inscricao,
+                   u.nome as usuario_nome,
+                   e.titulo as evento_titulo
+            FROM certificados c
+            INNER JOIN inscricoes i ON c.inscricao_id = i.id
+            INNER JOIN usuarios u ON i.usuario_id = u.id
+            INNER JOIN eventos e ON i.evento_id = e.id
+            WHERE i.id = :inscricao_id
+        ");
+        $stmt->execute(['inscricao_id' => $inscricaoId]);
+        return $stmt->fetch();
+    }
+
     private function gerarPDF($inscricao, $codigoValidacao, $caminhoArquivo) {
         // Gerar PDF simples usando funções nativas do PHP
         // Em produção, instale TCPDF via composer: composer require tecnickcom/tcpdf
