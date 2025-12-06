@@ -38,10 +38,13 @@ function criarCardEvento(evento) {
     const dataInicio = new Date(evento.data_inicio).toLocaleDateString('pt-BR');
     const dataFim = new Date(evento.data_fim).toLocaleDateString('pt-BR');
     
+    const numeroParticipantes = evento.numero_participantes || 0;
+    
     card.innerHTML = `
         <h3>${evento.titulo}</h3>
         <div class="evento-info"><strong>Data:</strong> ${dataInicio} - ${dataFim}</div>
         <div class="evento-info"><strong>Local:</strong> ${evento.localizacao || 'A definir'}</div>
+        <div class="evento-info"><strong>Participantes:</strong> ${numeroParticipantes}</div>
         <div class="evento-info"><strong>Vagas:</strong> ${evento.vagas_disponiveis || 0} disponíveis</div>
         <div class="evento-info"><strong>Valor:</strong> R$ ${parseFloat(evento.valor_inscricao || 0).toFixed(2)}</div>
         <span class="evento-status ${evento.status}">${evento.status}</span>
@@ -59,6 +62,7 @@ async function mostrarDetalhesEvento(evento) {
     
     const dataInicio = new Date(evento.data_inicio).toLocaleString('pt-BR');
     const dataFim = new Date(evento.data_fim).toLocaleString('pt-BR');
+    const numeroParticipantes = evento.numero_participantes || 0;
     
     detalhesDiv.innerHTML = `
         <div class="evento-card">
@@ -68,6 +72,7 @@ async function mostrarDetalhesEvento(evento) {
             <div class="evento-info"><strong>Data de Término:</strong> ${dataFim}</div>
             <div class="evento-info"><strong>Local:</strong> ${evento.localizacao || 'A definir'}</div>
             <div class="evento-info"><strong>Capacidade:</strong> ${evento.capacidade_maxima || 'Ilimitada'}</div>
+            <div class="evento-info"><strong>Participantes Inscritos:</strong> ${numeroParticipantes}</div>
             <div class="evento-info"><strong>Vagas Disponíveis:</strong> ${evento.vagas_disponiveis || 0}</div>
             <div class="evento-info"><strong>Valor:</strong> R$ ${parseFloat(evento.valor_inscricao || 0).toFixed(2)}</div>
             <div class="evento-info"><strong>Categoria:</strong> ${evento.categoria || 'Sem categoria'}</div>

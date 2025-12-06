@@ -65,26 +65,37 @@ public class EventosController : ControllerBase
 
         var eventos = await query
             .OrderBy(e => e.DataInicio)
-            .Select(e => new
-            {
-                e.Id,
-                e.Titulo,
-                e.Descricao,
-                e.DataInicio,
-                e.DataFim,
-                e.Localizacao,
-                e.CapacidadeMaxima,
-                e.VagasDisponiveis,
-                e.ValorInscricao,
-                e.Categoria,
-                e.Status
-            })
             .ToListAsync();
+
+        // Buscar contagem de participantes de cada evento usando LINQ
+        var eventoIds = eventos.Select(e => e.Id).ToList();
+        
+        var participantesPorEvento = await _context.Inscricoes
+            .Where(i => eventoIds.Contains(i.EventoId) && i.Status == "ativa")
+            .GroupBy(i => i.EventoId)
+            .Select(g => new { EventoId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.EventoId, x => x.Count);
+
+        var eventosComParticipantes = eventos.Select(e => new
+        {
+            e.Id,
+            e.Titulo,
+            e.Descricao,
+            e.DataInicio,
+            e.DataFim,
+            e.Localizacao,
+            e.CapacidadeMaxima,
+            e.VagasDisponiveis,
+            e.ValorInscricao,
+            e.Categoria,
+            e.Status,
+            NumeroParticipantes = participantesPorEvento.GetValueOrDefault(e.Id, 0)
+        }).ToList();
 
         return Ok(new
         {
-            total = eventos.Count,
-            eventos = eventos
+            total = eventosComParticipantes.Count,
+            eventos = eventosComParticipantes
         });
     }
 
@@ -105,22 +116,6 @@ public class EventosController : ControllerBase
     {
         var evento = await _context.Eventos
             .Where(e => e.Id == id)
-            .Select(e => new
-            {
-                e.Id,
-                e.Titulo,
-                e.Descricao,
-                e.DataInicio,
-                e.DataFim,
-                e.Localizacao,
-                e.CapacidadeMaxima,
-                e.VagasDisponiveis,
-                e.ValorInscricao,
-                e.Categoria,
-                e.Status,
-                e.CreatedAt,
-                e.UpdatedAt
-            })
             .FirstOrDefaultAsync();
 
         if (evento == null)
@@ -128,7 +123,28 @@ public class EventosController : ControllerBase
             return NotFound(new { message = "Evento não encontrado" });
         }
 
-        return Ok(evento);
+        // Contar participantes usando LINQ
+        var numeroParticipantes = await _context.Inscricoes
+            .Where(i => i.EventoId == id && i.Status == "ativa")
+            .CountAsync();
+
+        return Ok(new
+        {
+            evento.Id,
+            evento.Titulo,
+            evento.Descricao,
+            evento.DataInicio,
+            evento.DataFim,
+            evento.Localizacao,
+            evento.CapacidadeMaxima,
+            evento.VagasDisponiveis,
+            evento.ValorInscricao,
+            evento.Categoria,
+            evento.Status,
+            evento.CreatedAt,
+            evento.UpdatedAt,
+            NumeroParticipantes = numeroParticipantes
+        });
     }
 }
 
