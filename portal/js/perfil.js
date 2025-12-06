@@ -129,12 +129,12 @@ async function salvarPerfil() {
             nome: nome,
             cpf: cpf || null,
             telefone: telefone || null,
-            data_nascimento: dataNascimento || null
+            dataNascimento: dataNascimento || null
         };
 
         if (novaSenha) {
-            dados.senha_atual = senhaAtual;
-            dados.nova_senha = novaSenha;
+            dados.senhaAtual = senhaAtual;
+            dados.novaSenha = novaSenha;
         }
 
         const usuario = JSON.parse(localStorage.getItem('usuario'));
