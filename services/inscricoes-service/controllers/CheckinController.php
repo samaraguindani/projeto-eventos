@@ -24,13 +24,20 @@ class CheckinController {
         }
 
         try {
-            // Buscar usuário por CPF
+            // Limpar CPF (remover pontos e hífen)
+            $cpfLimpo = preg_replace('/[^0-9]/', '', $data['cpf']);
+            
+            // Buscar usuário por CPF (tentar com e sem formatação)
             $stmt = $this->db->prepare("
                 SELECT u.id, u.nome, u.email, u.cpf, u.cadastro_completo
                 FROM usuarios u
-                WHERE u.cpf = :cpf
+                WHERE REPLACE(REPLACE(u.cpf, '.', ''), '-', '') = :cpf_limpo
+                   OR u.cpf = :cpf_formatado
             ");
-            $stmt->execute(['cpf' => $data['cpf']]);
+            $stmt->execute([
+                'cpf_limpo' => $cpfLimpo,
+                'cpf_formatado' => $data['cpf']
+            ]);
             $usuario = $stmt->fetch();
 
             if (!$usuario) {
@@ -47,7 +54,9 @@ class CheckinController {
                 SELECT i.*, e.titulo as evento_titulo
                 FROM inscricoes i
                 INNER JOIN eventos e ON i.evento_id = e.id
-                WHERE i.usuario_id = :usuario_id AND i.evento_id = :evento_id
+                WHERE i.usuario_id = :usuario_id 
+                  AND i.evento_id = :evento_id
+                  AND i.status = 'ativa'
             ");
             $stmt->execute([
                 'usuario_id' => $usuario['id'],

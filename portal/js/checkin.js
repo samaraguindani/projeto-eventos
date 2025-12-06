@@ -38,7 +38,7 @@ function selecionarEvento() {
 }
 
 async function buscarParticipante() {
-    const cpf = document.getElementById('cpfInput').value.trim();
+    let cpf = document.getElementById('cpfInput').value.trim();
     
     if (!cpf) {
         mostrarMensagem('Digite o CPF do participante', 'error');
@@ -50,11 +50,20 @@ async function buscarParticipante() {
         return;
     }
 
+    // Normalizar CPF (remover pontos e hífen para busca)
+    const cpfLimpo = cpf.replace(/\D/g, '');
+    
+    // Se tiver menos de 11 dígitos, não é um CPF válido
+    if (cpfLimpo.length !== 11) {
+        mostrarMensagem('CPF inválido. Digite 11 dígitos.', 'error');
+        return;
+    }
+
     try {
         const data = await apiRequest(`${API_CONFIG.INSCRICOES}/checkin/buscar`, {
             method: 'POST',
             body: JSON.stringify({
-                cpf: cpf,
+                cpf: cpf, // Enviar com formatação também
                 evento_id: parseInt(eventoSelecionado)
             })
         });
@@ -65,7 +74,12 @@ async function buscarParticipante() {
             mostrarFormularioCadastroRapido(cpf);
         }
     } catch (error) {
-        mostrarFormularioCadastroRapido(cpf);
+        // Se der erro 404, mostrar formulário de cadastro
+        if (error.message && error.message.includes('404')) {
+            mostrarFormularioCadastroRapido(cpf);
+        } else {
+            mostrarMensagem(error.message || 'Erro ao buscar participante', 'error');
+        }
     }
 }
 
