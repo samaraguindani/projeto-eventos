@@ -89,12 +89,99 @@ async function sincronizarDados() {
             }
         }
 
+        // Sincronizar usuários cadastrados offline (check-in)
+        const usuariosOffline = await offlineDB.obterUsuariosOffline();
+        if (usuariosOffline.length > 0) {
+            const usuariosParaSync = usuariosOffline.map(u => ({
+                nome: u.nome,
+                email: u.email,
+                cpf: u.cpf,
+                evento_id: u.evento_id,
+                senha_temporaria: u.senha_temporaria,
+                temp_id: u.temp_id
+            }));
+
+            try {
+                const resultado = await apiRequest(`${API_CONFIG.INSCRICOES}/checkin/sincronizar-cadastros`, {
+                    method: 'POST',
+                    body: JSON.stringify({ usuarios: usuariosParaSync })
+                });
+
+                // Remover usuários sincronizados
+                for (const usuario of usuariosOffline) {
+                    await offlineDB.removerUsuarioOffline(usuario.temp_id);
+                }
+
+                mostrarMensagem(`${usuariosOffline.length} cadastro(s) sincronizado(s)`, 'success');
+            } catch (error) {
+                mostrarMensagem(`Erro ao sincronizar cadastros: ${error.message}`, 'error');
+            }
+        }
+
+        // Sincronizar check-ins offline
+        const checkinsOffline = await offlineDB.obterCheckinsOffline();
+        if (checkinsOffline.length > 0) {
+            const checkinsParaSync = checkinsOffline.map(c => ({
+                cpf: c.cpf,
+                evento_id: c.evento_id,
+                dados_usuario: c.dados_usuario,
+                temp_id: c.temp_id
+            }));
+
+            try {
+                const resultado = await apiRequest(`${API_CONFIG.INSCRICOES}/checkin/sincronizar`, {
+                    method: 'POST',
+                    body: JSON.stringify({ checkins: checkinsParaSync })
+                });
+
+                // Remover check-ins sincronizados
+                for (const checkin of checkinsOffline) {
+                    await offlineDB.removerCheckinOffline(checkin.temp_id);
+                }
+
+                mostrarMensagem(`${checkinsOffline.length} check-in(s) sincronizado(s)`, 'success');
+            } catch (error) {
+                mostrarMensagem(`Erro ao sincronizar check-ins: ${error.message}`, 'error');
+            }
+        }
+
+        // Sincronizar usuários do servidor para o cache local (para busca offline)
+        // Buscar usuários que foram encontrados durante check-ins sincronizados
+        try {
+            // Após sincronizar check-ins, os usuários já foram criados/encontrados no servidor
+            // Podemos buscar alguns usuários recentes para cache (opcional)
+            // Por enquanto, os usuários são salvos no cache quando são buscados online
+            console.log('Cache de usuários será atualizado quando usuários forem buscados online');
+        } catch (error) {
+            console.error('Erro ao sincronizar cache de usuários:', error);
+        }
+
         // Recarregar dados
         carregarMinhasInscricoes();
         carregarEventos();
         
+        // Recarregar eventos do check-in se estiver na seção
+        if (document.getElementById('checkinSection') && document.getElementById('checkinSection').classList.contains('active')) {
+            carregarEventosParaCheckin();
+        }
+        
     } catch (error) {
         mostrarMensagem(`Erro na sincronização: ${error.message}`, 'error');
+    }
+}
+
+// Sincronizar usuários do servidor para o cache local (chamado quando online)
+async function sincronizarUsuariosCache() {
+    if (!isOnline()) {
+        return;
+    }
+
+    try {
+        // Buscar usuários recentes do servidor (opcional - pode ser implementado se houver endpoint)
+        // Por enquanto, usuários são salvos no cache quando são buscados durante check-in
+        console.log('Usuários são salvos no cache automaticamente quando buscados');
+    } catch (error) {
+        console.error('Erro ao sincronizar cache de usuários:', error);
     }
 }
 

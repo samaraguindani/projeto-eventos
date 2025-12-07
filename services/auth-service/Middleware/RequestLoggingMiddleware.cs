@@ -10,14 +10,19 @@ public class RequestLoggingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<RequestLoggingMiddleware> _logger;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
+    public RequestLoggingMiddleware(
+        RequestDelegate next, 
+        ILogger<RequestLoggingMiddleware> logger,
+        IServiceScopeFactory serviceScopeFactory)
     {
         _next = next;
         _logger = logger;
+        _serviceScopeFactory = serviceScopeFactory; // Factory para criar escopos
     }
 
-    public async Task InvokeAsync(HttpContext context, IServiceProvider serviceProvider)
+    public async Task InvokeAsync(HttpContext context)
     {
         var stopwatch = Stopwatch.StartNew();
         var originalBodyStream = context.Response.Body;
@@ -63,8 +68,8 @@ public class RequestLoggingMiddleware
         {
             try
             {
-                // Criar novo escopo para obter novo contexto do banco
-                using var scope = serviceProvider.CreateScope();
+                // Criar novo escopo usando o IServiceScopeFactory (não descartado)
+                using var scope = _serviceScopeFactory.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
                 var log = new ProjetoEventosAuth.Models.Log

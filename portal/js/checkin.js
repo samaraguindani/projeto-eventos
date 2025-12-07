@@ -7,12 +7,34 @@ async function carregarEventosParaCheckin() {
     select.innerHTML = '<option value="">Carregando...</option>';
 
     try {
-        const data = await apiRequest(`${API_CONFIG.EVENTOS}/eventos`);
+        let eventos = [];
+        
+        if (isOnline()) {
+            // Online: buscar do servidor e atualizar cache
+            const data = await apiRequest(`${API_CONFIG.EVENTOS}/eventos`);
+            eventos = data.eventos || [];
+            
+            // Salvar no cache
+            if (eventos.length > 0) {
+                await offlineDB.init();
+                await offlineDB.salvarEventosCache(eventos);
+            }
+        } else {
+            // Offline: usar cache
+            await offlineDB.init();
+            eventos = await offlineDB.obterEventosCache();
+            
+            if (eventos.length === 0) {
+                select.innerHTML = '<option value="">Nenhum evento em cache. Conecte-se à internet para carregar eventos.</option>';
+                mostrarMensagem('Modo offline: usando eventos em cache. Conecte-se à internet para atualizar.', 'info');
+                return;
+            }
+        }
         
         select.innerHTML = '<option value="">Selecione um evento</option>';
         
-        if (data.eventos && data.eventos.length > 0) {
-            data.eventos.forEach(evento => {
+        if (eventos.length > 0) {
+            eventos.forEach(evento => {
                 const option = document.createElement('option');
                 option.value = evento.id;
                 option.textContent = `${evento.titulo} - ${new Date(evento.data_inicio).toLocaleDateString('pt-BR')}`;
@@ -20,6 +42,27 @@ async function carregarEventosParaCheckin() {
             });
         }
     } catch (error) {
+        // Se falhar online, tentar cache
+        if (isOnline()) {
+            try {
+                await offlineDB.init();
+                const eventos = await offlineDB.obterEventosCache();
+                if (eventos.length > 0) {
+                    select.innerHTML = '<option value="">Selecione um evento</option>';
+                    eventos.forEach(evento => {
+                        const option = document.createElement('option');
+                        option.value = evento.id;
+                        option.textContent = `${evento.titulo} - ${new Date(evento.data_inicio).toLocaleDateString('pt-BR')}`;
+                        select.appendChild(option);
+                    });
+                    mostrarMensagem('Usando eventos em cache devido a erro na conexão', 'warning');
+                    return;
+                }
+            } catch (cacheError) {
+                console.error('Erro ao carregar cache:', cacheError);
+            }
+        }
+        
         select.innerHTML = '<option value="">Erro ao carregar eventos</option>';
         mostrarMensagem('Erro ao carregar eventos', 'error');
     }
@@ -59,6 +102,13 @@ async function buscarParticipante() {
         return;
     }
 
+    // Se estiver offline, buscar no IndexedDB
+    if (!isOnline()) {
+        await buscarParticipanteOffline(cpf, cpfLimpo);
+        return;
+    }
+
+    // Online: buscar no servidor
     try {
         const response = await fetch(`${API_CONFIG.INSCRICOES}/checkin/buscar`, {
             method: 'POST',
@@ -87,14 +137,21 @@ async function buscarParticipante() {
 
         // Se encontrou o usuário
         if (data.encontrado) {
+            // Salvar usuário no cache local para uso offline
+            if (data.usuario) {
+                await offlineDB.init();
+                await offlineDB.salvarUsuarioCache(data.usuario);
+            }
             mostrarDadosParticipante(data);
         } else {
             // Usuário não encontrado - mostrar formulário de cadastro rápido
             mostrarFormularioCadastroRapido(cpf);
         }
     } catch (error) {
-        // Se der qualquer erro de rede ou "não encontrado", mostrar formulário de cadastro
-        if (error.message && (error.message.includes('não encontrado') || error.message.includes('Participante não encontrado') || error.message.includes('404'))) {
+        // Se der erro de rede, tentar buscar offline
+        if (error.message && error.message.includes('Sem conexão')) {
+            await buscarParticipanteOffline(cpf, cpfLimpo);
+        } else if (error.message && (error.message.includes('não encontrado') || error.message.includes('Participante não encontrado') || error.message.includes('404'))) {
             mostrarFormularioCadastroRapido(cpf);
         } else {
             // Outros erros - mostrar mensagem
@@ -104,18 +161,156 @@ async function buscarParticipante() {
     }
 }
 
+// Buscar participante offline (no SQLite)
+async function buscarParticipanteOffline(cpf, cpfLimpo) {
+    try {
+        await offlineDB.init();
+        
+        // Buscar usuário cadastrado offline
+        const usuarioOffline = await offlineDB.buscarUsuarioOfflinePorCpf(cpfLimpo);
+        
+        if (usuarioOffline) {
+            // Usuário encontrado no cache offline ou do servidor
+            mostrarDadosParticipante({
+                encontrado: true,
+                usuario: {
+                    id: usuarioOffline.temp_id || usuarioOffline.id, // ID temporário ou do servidor
+                    nome: usuarioOffline.nome,
+                    email: usuarioOffline.email,
+                    cpf: usuarioOffline.cpf,
+                    cadastro_completo: usuarioOffline.cadastro_completo || false
+                },
+                inscricao: null,
+                tem_inscricao: false,
+                offline: true,
+                do_servidor: usuarioOffline.do_servidor || false // Indica se veio do cache do servidor
+            });
+        } else {
+            // Usuário não encontrado localmente - mas pode existir no servidor
+            // Mostrar opção de check-in direto (o backend vai verificar/criar na sincronização)
+            mostrarCheckinDiretoOffline(cpf);
+        }
+    } catch (error) {
+        console.error('Erro ao buscar participante offline:', error);
+        // Se der erro, permitir check-in direto
+        mostrarCheckinDiretoOffline(cpf);
+    }
+}
+
+// Mostrar opção de check-in direto quando offline e usuário não encontrado localmente
+function mostrarCheckinDiretoOffline(cpf) {
+    const resultado = document.getElementById('resultadoBusca');
+    
+    resultado.innerHTML = `
+        <div class="checkin-direto-offline">
+            <h3>Cadastro Rápido na Portaria</h3>
+            <div class="alert alert-warning">
+                <strong>⚠ Modo Offline</strong><br>
+                Usuário não encontrado. Preencha os dados para cadastro, inscrição e check-in.
+            </div>
+            <p><strong>CPF:</strong> ${cpf}</p>
+            
+            <form onsubmit="event.preventDefault(); fazerCheckinDiretoOffline('${cpf}');" style="margin-top: 20px;">
+                <div class="form-group">
+                    <label>Nome Completo *</label>
+                    <input type="text" id="nomeCheckinDireto" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="emailCheckinDireto" class="form-control" required>
+                </div>
+                
+                <div class="alert alert-info" style="margin-top: 15px;">
+                    <small>
+                        <strong>Atenção:</strong> Uma senha temporária será gerada e enviada por email.
+                        O participante deverá completar o cadastro posteriormente.
+                    </small>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        Cadastrar, Inscrever e Fazer Check-in
+                    </button>
+                    <button type="button" onclick="limparBusca()" class="btn btn-secondary" style="margin-left: 10px;">
+                        Cancelar
+                    </button>
+                </div>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    <small>Os dados serão salvos localmente e sincronizados quando houver conexão.</small>
+                </p>
+            </form>
+        </div>
+    `;
+}
+
+// Fazer check-in direto offline (quando usuário não encontrado localmente)
+async function fazerCheckinDiretoOffline(cpf) {
+    const nome = document.getElementById('nomeCheckinDireto')?.value.trim();
+    const email = document.getElementById('emailCheckinDireto')?.value.trim();
+    
+    // Validar campos obrigatórios
+    if (!nome || !email) {
+        mostrarMensagem('Preencha todos os campos obrigatórios (Nome e Email)', 'error');
+        return;
+    }
+    
+    try {
+        await offlineDB.init();
+        
+        const cpfLimpo = cpf.replace(/\D/g, '');
+        
+        // Gerar senha temporária local
+        const senhaTemporaria = Math.random().toString(36).slice(-8);
+        
+        // Salvar usuário offline primeiro (cadastro rápido)
+        const usuarioTempId = await offlineDB.adicionarUsuarioOffline({
+            nome: nome,
+            email: email,
+            cpf: cpfLimpo,
+            senha_temporaria: senhaTemporaria,
+            evento_id: parseInt(eventoSelecionado)
+        });
+        
+        // Salvar check-in offline também
+        await offlineDB.adicionarCheckinOffline(
+            cpf,
+            parseInt(eventoSelecionado),
+            usuarioTempId,
+            {
+                nome: nome,
+                email: email,
+                cpf: cpfLimpo
+            }
+        );
+        
+        mostrarMensagem('Cadastro e check-in salvos localmente. Serão sincronizados quando a conexão for restaurada.', 'success');
+        
+        // Mostrar senha temporária
+        alert(`Cadastro salvo offline!\n\nSenha temporária: ${senhaTemporaria}\n\nAnote esta senha e informe ao participante.\n\nOs dados serão sincronizados quando houver conexão.`);
+        
+        limparBusca();
+        
+    } catch (error) {
+        console.error('Erro ao salvar check-in offline:', error);
+        mostrarMensagem('Erro ao salvar check-in offline', 'error');
+    }
+}
+
 function mostrarDadosParticipante(data) {
     const resultado = document.getElementById('resultadoBusca');
+    const isOffline = data.offline || !isOnline();
     
     let html = `
         <div class="participante-encontrado">
             <h3>✓ Participante Encontrado</h3>
+            ${isOffline ? '<div class="alert alert-warning"><strong>⚠ Modo Offline</strong> - Dados serão sincronizados quando a conexão for restaurada.</div>' : ''}
             <p><strong>Nome:</strong> ${data.usuario.nome}</p>
             <p><strong>Email:</strong> ${data.usuario.email}</p>
             <p><strong>CPF:</strong> ${data.usuario.cpf}</p>
     `;
 
-    if (data.tem_inscricao) {
+    if (data.tem_inscricao && !isOffline) {
         if (data.inscricao.presenca_registrada) {
             html += `
                 <div class="alert alert-info">
@@ -132,12 +327,12 @@ function mostrarDadosParticipante(data) {
         }
     } else {
         html += `
-            <div class="alert alert-warning">
-                <strong>⚠ Participante não inscrito neste evento</strong>
+            <div class="alert alert-info">
+                <strong>ℹ Participante não inscrito neste evento</strong>
             </div>
-            <p>O participante será inscrito automaticamente e o check-in será registrado.</p>
+            <p>O sistema irá <strong>inscrever automaticamente</strong> e registrar o check-in.</p>
             <button onclick="confirmarCheckin('${data.usuario.cpf}')" class="btn btn-success btn-lg">
-                Inscrever e Fazer Check-in
+                Fazer Check-in (Inscrever Automaticamente)
             </button>
         `;
     }
@@ -153,6 +348,9 @@ function mostrarFormularioCadastroRapido(cpf) {
         <div class="cadastro-rapido">
             <h3>Cadastro Rápido na Portaria</h3>
             <p>Participante não encontrado. Preencha os dados básicos:</p>
+            <div class="alert alert-info" style="margin-bottom: 15px;">
+                <small><strong>ℹ O sistema irá:</strong> Cadastrar → Inscrever → Fazer Check-in (tudo automaticamente)</small>
+            </div>
             
             <form onsubmit="event.preventDefault(); realizarCadastroRapido();">
                 <div class="form-group">
@@ -177,8 +375,8 @@ function mostrarFormularioCadastroRapido(cpf) {
                     </small>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-lg">
-                    Cadastrar e Fazer Check-in
+                <button type="submit" class="btn btn-success btn-lg">
+                    Cadastrar, Inscrever e Fazer Check-in
                 </button>
                 <button type="button" onclick="limparBusca()" class="btn btn-secondary">
                     Cancelar
@@ -189,10 +387,17 @@ function mostrarFormularioCadastroRapido(cpf) {
 }
 
 async function confirmarCheckin(cpf) {
-    if (!confirm('Confirmar check-in do participante?\n\nSe não estiver inscrito, a inscrição será criada automaticamente.')) {
+    if (!confirm('Confirmar check-in do participante?\n\n✓ Se já estiver inscrito: apenas valida a entrada\n✓ Se não estiver inscrito: inscreve automaticamente e valida\n✓ Tudo em uma única ação!')) {
         return;
     }
 
+    // Se estiver offline, salvar no IndexedDB
+    if (!isOnline()) {
+        await confirmarCheckinOffline(cpf);
+        return;
+    }
+
+    // Online: registrar no servidor
     try {
         const data = await apiRequest(`${API_CONFIG.INSCRICOES}/checkin/registrar`, {
             method: 'POST',
@@ -211,7 +416,52 @@ async function confirmarCheckin(cpf) {
         limparBusca();
         
     } catch (error) {
-        mostrarMensagem(error.message || 'Erro ao registrar check-in', 'error');
+        // Se der erro de rede, tentar salvar offline
+        if (error.message && error.message.includes('Sem conexão')) {
+            await confirmarCheckinOffline(cpf);
+        } else {
+            mostrarMensagem(error.message || 'Erro ao registrar check-in', 'error');
+        }
+    }
+}
+
+// Confirmar check-in offline
+async function confirmarCheckinOffline(cpf) {
+    try {
+        await offlineDB.init();
+        
+        // Buscar dados do participante (pode estar no cache offline)
+        const cpfLimpo = cpf.replace(/\D/g, '');
+        const usuarioOffline = await offlineDB.buscarUsuarioOfflinePorCpf(cpfLimpo);
+        
+        // Salvar check-in offline
+        // Se não tiver dados do usuário localmente, salva apenas com CPF
+        // O backend vai verificar se o usuário existe na sincronização
+        await offlineDB.adicionarCheckinOffline(
+            cpf,
+            parseInt(eventoSelecionado),
+            usuarioOffline ? usuarioOffline.temp_id : null,
+            usuarioOffline ? {
+                nome: usuarioOffline.nome,
+                email: usuarioOffline.email,
+                cpf: usuarioOffline.cpf
+            } : {
+                // Dados mínimos - apenas CPF para o backend verificar na sincronização
+                cpf: cpfLimpo,
+                verificar_no_servidor: true
+            }
+        );
+        
+        if (usuarioOffline) {
+            mostrarMensagem('Check-in salvo localmente. Será sincronizado quando a conexão for restaurada.', 'success');
+        } else {
+            mostrarMensagem('Check-in salvo localmente. O sistema verificará se o usuário existe no servidor durante a sincronização.', 'success');
+        }
+        limparBusca();
+        
+    } catch (error) {
+        console.error('Erro ao salvar check-in offline:', error);
+        mostrarMensagem('Erro ao salvar check-in offline', 'error');
     }
 }
 
@@ -225,6 +475,13 @@ async function realizarCadastroRapido() {
         return;
     }
 
+    // Se estiver offline, salvar no IndexedDB
+    if (!isOnline()) {
+        await realizarCadastroRapidoOffline(nome, cpf, email);
+        return;
+    }
+
+    // Online: registrar no servidor
     try {
         const data = await apiRequest(`${API_CONFIG.INSCRICOES}/checkin/cadastro-rapido`, {
             method: 'POST',
@@ -244,7 +501,54 @@ async function realizarCadastroRapido() {
         limparBusca();
         
     } catch (error) {
-        mostrarMensagem(error.message || 'Erro ao realizar cadastro', 'error');
+        // Se der erro de rede, tentar salvar offline
+        if (error.message && error.message.includes('Sem conexão')) {
+            await realizarCadastroRapidoOffline(nome, cpf, email);
+        } else {
+            mostrarMensagem(error.message || 'Erro ao realizar cadastro', 'error');
+        }
+    }
+}
+
+// Realizar cadastro rápido offline
+async function realizarCadastroRapidoOffline(nome, cpf, email) {
+    try {
+        await offlineDB.init();
+        
+        // Gerar senha temporária local
+        const senhaTemporaria = Math.random().toString(36).slice(-8);
+        
+        // Salvar usuário offline
+        const usuarioTempId = await offlineDB.adicionarUsuarioOffline({
+            nome: nome,
+            email: email,
+            cpf: cpf.replace(/\D/g, ''),
+            senha_temporaria: senhaTemporaria,
+            evento_id: parseInt(eventoSelecionado)
+        });
+        
+        // Salvar check-in offline também
+        await offlineDB.adicionarCheckinOffline(
+            cpf,
+            parseInt(eventoSelecionado),
+            usuarioTempId,
+            {
+                nome: nome,
+                email: email,
+                cpf: cpf
+            }
+        );
+        
+        mostrarMensagem('Cadastro e check-in salvos localmente. Serão sincronizados quando a conexão for restaurada.', 'success');
+        
+        // Mostrar senha temporária
+        alert(`Cadastro salvo offline!\n\nSenha temporária: ${senhaTemporaria}\n\nAnote esta senha e informe ao participante.\n\nOs dados serão sincronizados quando houver conexão.`);
+        
+        limparBusca();
+        
+    } catch (error) {
+        console.error('Erro ao salvar cadastro offline:', error);
+        mostrarMensagem('Erro ao salvar cadastro offline', 'error');
     }
 }
 

@@ -4,28 +4,72 @@ async function carregarEventos() {
     eventosList.innerHTML = '<div class="loading">Carregando eventos...</div>';
 
     try {
-        const data = await apiRequest(`${API_CONFIG.EVENTOS}/eventos`);
+        let eventos = [];
         
-        if (data.eventos && data.eventos.length > 0) {
+        if (isOnline()) {
+            // Online: buscar do servidor
+            const data = await apiRequest(`${API_CONFIG.EVENTOS}/eventos`);
+            eventos = data.eventos || [];
+            
+            // Salvar no cache para uso offline
+            if (eventos.length > 0) {
+                await offlineDB.init();
+                await offlineDB.salvarEventosCache(eventos);
+            }
+        } else {
+            // Offline: usar cache
+            await offlineDB.init();
+            eventos = await offlineDB.obterEventosCache();
+            
+            if (eventos.length === 0) {
+                eventosList.innerHTML = '<div class="message warning">Nenhum evento em cache. Conecte-se à internet para carregar eventos.</div>';
+                return;
+            }
+        }
+        
+        if (eventos.length > 0) {
             eventosList.innerHTML = '';
             
             // Preencher filtro de categorias
-            const categorias = [...new Set(data.eventos.map(e => e.categoria).filter(Boolean))];
+            const categorias = [...new Set(eventos.map(e => e.categoria).filter(Boolean))];
             const filtroCategoria = document.getElementById('filtroCategoria');
-            categorias.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                filtroCategoria.appendChild(option);
-            });
+            if (filtroCategoria) {
+                // Limpar opções existentes (exceto a primeira)
+                while (filtroCategoria.children.length > 1) {
+                    filtroCategoria.removeChild(filtroCategoria.lastChild);
+                }
+                categorias.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    filtroCategoria.appendChild(option);
+                });
+            }
             
-            data.eventos.forEach(evento => {
+            eventos.forEach(evento => {
                 eventosList.appendChild(criarCardEvento(evento));
             });
         } else {
             eventosList.innerHTML = '<p>Nenhum evento encontrado.</p>';
         }
     } catch (error) {
+        // Se falhar online, tentar cache
+        if (isOnline()) {
+            try {
+                await offlineDB.init();
+                const eventos = await offlineDB.obterEventosCache();
+                if (eventos.length > 0) {
+                    eventosList.innerHTML = '';
+                    eventos.forEach(evento => {
+                        eventosList.appendChild(criarCardEvento(evento));
+                    });
+                    mostrarMensagem('Usando eventos em cache devido a erro na conexão', 'warning');
+                    return;
+                }
+            } catch (cacheError) {
+                console.error('Erro ao carregar cache:', cacheError);
+            }
+        }
         eventosList.innerHTML = `<div class="message error">${error.message}</div>`;
     }
 }
@@ -70,15 +114,15 @@ async function mostrarDetalhesEvento(evento) {
     
     let botoesHtml = '';
     if (isAdminOuAtendente) {
-        // Botões para Admin/Atendente
+        // Botão único para Admin/Atendente - Check-in faz tudo automaticamente
         botoesHtml = `
-            <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-                <button onclick="abrirCheckinEvento(${evento.id}, '${evento.titulo.replace(/'/g, "\\'")}')" class="btn btn-success">
+            <div style="margin-top: 20px;">
+                <button onclick="abrirCheckinEvento(${evento.id}, '${evento.titulo.replace(/'/g, "\\'")}')" class="btn btn-success btn-lg">
                     Check-in de Participante
                 </button>
-                <button onclick="abrirInscricaoRapidaEvento(${evento.id}, '${evento.titulo.replace(/'/g, "\\'")}')" class="btn btn-primary">
-                    Inscrever Participante
-                </button>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    <small>O sistema irá automaticamente: verificar participante, inscrever se necessário e registrar o check-in.</small>
+                </p>
             </div>
         `;
     } else {
@@ -123,24 +167,8 @@ function abrirCheckinEvento(eventoId, eventoTitulo) {
     }, 200);
 }
 
-function abrirInscricaoRapidaEvento(eventoId, eventoTitulo) {
-    // Ir para seção de check-in
-    showSection('checkin');
-    
-    // Selecionar o evento e mostrar formulário de cadastro rápido
-    setTimeout(() => {
-        const select = document.getElementById('eventoCheckin');
-        if (select) {
-            select.value = eventoId;
-            selecionarEvento();
-        }
-        
-        // Mostrar formulário de cadastro rápido diretamente
-        setTimeout(() => {
-            mostrarFormularioCadastroRapido('');
-        }, 100);
-    }, 200);
-}
+// Função removida - não é mais necessária
+// O check-in já faz tudo automaticamente: busca, cadastra se necessário, inscreve se necessário e valida entrada
 
 function filtrarEventos() {
     // Implementação simples - em produção, fazer requisição com filtros

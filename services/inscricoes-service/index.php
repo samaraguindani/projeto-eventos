@@ -59,6 +59,10 @@ if ($path === '' || $path === '/') {
     $checkinController->registrarPresencaPorCpf();
 } elseif ($path === '/checkin/cadastro-rapido' && $method === 'POST') {
     $checkinController->cadastroRapido();
+} elseif ($path === '/checkin/sincronizar-cadastros' && $method === 'POST') {
+    $checkinController->sincronizarCadastros();
+} elseif ($path === '/checkin/sincronizar' && $method === 'POST') {
+    $checkinController->sincronizarCheckins();
 } else {
     http_response_code(404);
     echo json_encode(['message' => 'Endpoint não encontrado']);
