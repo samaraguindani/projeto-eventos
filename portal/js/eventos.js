@@ -108,12 +108,26 @@ async function mostrarDetalhesEvento(evento) {
     const dataFim = new Date(evento.data_fim).toLocaleString('pt-BR');
     const numeroParticipantes = evento.numero_participantes || 0;
     
-    // Verificar se é admin ou atendente
-    const usuario = JSON.parse(localStorage.getItem('usuario'));
-    const isAdminOuAtendente = usuario && (usuario.papel === 'admin' || usuario.papel === 'atendente');
+    // Verificar se está logado
+    const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+    const token = localStorage.getItem('token');
+    const isLogado = usuario && token;
+    const isAdminOuAtendente = isLogado && (usuario.papel === 'admin' || usuario.papel === 'atendente');
     
     let botoesHtml = '';
-    if (isAdminOuAtendente) {
+    if (!isLogado) {
+        // Usuário não logado - mostrar botão para fazer login
+        botoesHtml = `
+            <div style="margin-top: 20px;">
+                <div class="alert alert-info">
+                    <strong>ℹ Faça login para se inscrever neste evento</strong>
+                </div>
+                <button onclick="showSection('authSection'); switchTab('login');" class="btn btn-primary btn-lg">
+                    Fazer Login para Inscrever-se
+                </button>
+            </div>
+        `;
+    } else if (isAdminOuAtendente) {
         // Botão único para Admin/Atendente - Check-in faz tudo automaticamente
         botoesHtml = `
             <div style="margin-top: 20px;">
@@ -126,7 +140,7 @@ async function mostrarDetalhesEvento(evento) {
             </div>
         `;
     } else {
-        // Botão para usuário comum
+        // Botão para usuário comum logado
         botoesHtml = `
             <div style="margin-top: 20px;">
                 <button onclick="inscreverNoEvento(${evento.id})" class="btn btn-primary">Inscrever-se</button>

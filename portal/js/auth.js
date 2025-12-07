@@ -1,10 +1,5 @@
 // Funções de autenticação
-async function login(event) {
-    event.preventDefault();
-    
-    const email = document.getElementById('loginEmail').value;
-    const senha = document.getElementById('loginSenha').value;
-
+async function fazerLogin(email, senha) {
     try {
         const data = await apiRequest(`${API_CONFIG.AUTH}/auth/login`, {
             method: 'POST',
@@ -16,6 +11,7 @@ async function login(event) {
         
         mostrarMensagem('Login realizado com sucesso!', 'success');
         mostrarConteudoAutenticado();
+        atualizarMenuPorPapel();
         
         // Inicializar banco offline
         await offlineDB.init();
@@ -24,15 +20,13 @@ async function login(event) {
     }
 }
 
-async function cadastro(event) {
-    event.preventDefault();
-    
+async function fazerCadastro(nome, email, senha, cpf, telefone) {
     const dados = {
-        nome: document.getElementById('cadastroNome').value,
-        email: document.getElementById('cadastroEmail').value,
-        senha: document.getElementById('cadastroSenha').value,
-        cpf: document.getElementById('cadastroCpf').value || null,
-        telefone: document.getElementById('cadastroTelefone').value || null
+        nome: nome,
+        email: email,
+        senha: senha,
+        cpf: cpf || null,
+        telefone: telefone || null
     };
 
     try {
@@ -46,6 +40,7 @@ async function cadastro(event) {
         
         mostrarMensagem('Cadastro realizado com sucesso!', 'success');
         mostrarConteudoAutenticado();
+        atualizarMenuPorPapel();
         
         // Inicializar banco offline
         await offlineDB.init();
@@ -54,10 +49,57 @@ async function cadastro(event) {
     }
 }
 
+async function login(event) {
+    event.preventDefault();
+    
+    // Tentar pegar da página inicial primeiro, depois da seção normal
+    const emailInput = document.getElementById('loginEmailInicial') || document.getElementById('loginEmail');
+    const senhaInput = document.getElementById('loginSenhaInicial') || document.getElementById('loginSenha');
+    
+    if (!emailInput || !senhaInput) {
+        mostrarMensagem('Campos de login não encontrados', 'error');
+        return;
+    }
+    
+    const email = emailInput.value;
+    const senha = senhaInput.value;
+    
+    await fazerLogin(email, senha);
+}
+
+async function cadastro(event) {
+    event.preventDefault();
+    
+    // Tentar pegar da página inicial primeiro, depois da seção normal
+    const nomeInput = document.getElementById('cadastroNomeInicial') || document.getElementById('cadastroNome');
+    const emailInput = document.getElementById('cadastroEmailInicial') || document.getElementById('cadastroEmail');
+    const senhaInput = document.getElementById('cadastroSenhaInicial') || document.getElementById('cadastroSenha');
+    const cpfInput = document.getElementById('cadastroCpfInicial') || document.getElementById('cadastroCpf');
+    const telefoneInput = document.getElementById('cadastroTelefoneInicial') || document.getElementById('cadastroTelefone');
+    
+    if (!nomeInput || !emailInput || !senhaInput) {
+        mostrarMensagem('Campos de cadastro não encontrados', 'error');
+        return;
+    }
+    
+    const nome = nomeInput.value;
+    const email = emailInput.value;
+    const senha = senhaInput.value;
+    const cpf = cpfInput?.value || null;
+    const telefone = telefoneInput?.value || null;
+    
+    await fazerCadastro(nome, email, senha, cpf, telefone);
+}
+
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
     mostrarConteudoNaoAutenticado();
+    
+    // Voltar para página inicial (login + eventos)
+    if (typeof mostrarPaginaInicial === 'function') {
+        mostrarPaginaInicial();
+    }
     
     // Atualizar menu para esconder todas as abas
     if (typeof atualizarMenuPorPapel === 'function') {
@@ -66,15 +108,45 @@ function logout() {
 }
 
 function switchTab(tab) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+    // Verificar se está na página inicial
+    const paginaInicial = document.getElementById('paginaInicialSection');
+    const isPaginaInicial = paginaInicial && paginaInicial.classList.contains('active');
     
-    if (tab === 'login') {
-        document.querySelector('.tab:first-child').classList.add('active');
-        document.getElementById('loginForm').classList.add('active');
+    if (isPaginaInicial) {
+        // Tabs da página inicial
+        const container = document.querySelector('#paginaInicialSection .auth-container');
+        if (container) {
+            container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            container.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            
+            if (tab === 'login') {
+                const loginTab = container.querySelector('.tab:first-child');
+                if (loginTab) loginTab.classList.add('active');
+                const loginForm = document.getElementById('loginFormInicial');
+                if (loginForm) loginForm.classList.add('active');
+            } else {
+                const cadastroTab = container.querySelector('.tab:last-child');
+                if (cadastroTab) cadastroTab.classList.add('active');
+                const cadastroForm = document.getElementById('cadastroFormInicial');
+                if (cadastroForm) cadastroForm.classList.add('active');
+            }
+        }
     } else {
-        document.querySelector('.tab:last-child').classList.add('active');
-        document.getElementById('cadastroForm').classList.add('active');
+        // Tabs da seção normal
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+        
+        if (tab === 'login') {
+            const loginTab = document.querySelector('.tab:first-child');
+            if (loginTab) loginTab.classList.add('active');
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) loginForm.classList.add('active');
+        } else {
+            const cadastroTab = document.querySelector('.tab:last-child');
+            if (cadastroTab) cadastroTab.classList.add('active');
+            const cadastroForm = document.getElementById('cadastroForm');
+            if (cadastroForm) cadastroForm.classList.add('active');
+        }
     }
 }
 
@@ -84,7 +156,16 @@ function verificarAutenticacao() {
 }
 
 function mostrarConteudoAutenticado() {
+    // Esconder página inicial se existir
+    const paginaInicial = document.getElementById('paginaInicialSection');
+    if (paginaInicial) {
+        paginaInicial.classList.remove('active');
+    }
+    
+    // Esconder seção de auth normal
     document.getElementById('authSection').classList.remove('active');
+    
+    // Mostrar seção de eventos
     document.getElementById('eventosSection').classList.add('active');
     
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
@@ -101,18 +182,19 @@ function mostrarConteudoAutenticado() {
 
 function mostrarConteudoNaoAutenticado() {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById('authSection').classList.add('active');
+    // Não ativar authSection por padrão - eventos será ativado no app.js
     document.getElementById('userInfo').textContent = '';
     document.getElementById('logoutBtn').style.display = 'none';
     
-    // Esconder todas as abas quando não está logado
+    // Esconder apenas abas que requerem autenticação
+    // Eventos e Certificados permanecem visíveis (públicos)
     const linkInscricoes = document.getElementById('linkInscricoes');
-    const linkCertificados = document.getElementById('linkCertificados');
     const linkCheckin = document.getElementById('linkCheckin');
+    const linkPerfil = document.getElementById('linkPerfil');
     
     if (linkInscricoes) linkInscricoes.style.display = 'none';
-    if (linkCertificados) linkCertificados.style.display = 'none';
     if (linkCheckin) linkCheckin.style.display = 'none';
+    if (linkPerfil) linkPerfil.style.display = 'none';
 }
 
 function mostrarMensagem(mensagem, tipo = 'info') {

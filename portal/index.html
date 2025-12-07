@@ -12,9 +12,10 @@
         <div class="container">
             <h1>Sistema de Eventos</h1>
             <div class="nav-links" id="navLinks">
-                <a href="#" onclick="showSection('eventos')" id="linkEventos" style="display:none;">Eventos</a>
-                <a href="#" onclick="showSection('minhasInscricoes')" id="linkInscricoes" style="display:none;">Minhas Inscrições</a>
+                <a href="#" onclick="showSection('eventos')" id="linkEventos">Eventos</a>
                 <a href="#" onclick="showSection('certificados')" id="linkCertificados">Validar Certificado</a>
+                <a href="#" onclick="mostrarPaginaInicial()" id="linkLogin" style="display:none;">Login</a>
+                <a href="#" onclick="showSection('minhasInscricoes')" id="linkInscricoes" style="display:none;">Minhas Inscrições</a>
                 <a href="#" onclick="showSection('checkin')" id="linkCheckin" style="display:none;">Check-in</a>
                 <a href="#" onclick="showSection('perfil')" id="linkPerfil" style="display:none;">Meu Perfil</a>
                 <span id="userInfo" class="user-info"></span>
@@ -30,8 +31,8 @@
     </div>
 
     <!-- Seção de Login/Cadastro -->
-    <section id="authSection" class="section active">
-        <div class="auth-container">
+    <section id="authSection" class="section">
+        <div class="auth-container" id="authContainer">
             <div class="auth-tabs">
                 <button class="tab active" onclick="switchTab('login')">Login</button>
                 <button class="tab" onclick="switchTab('cadastro')">Cadastro</button>

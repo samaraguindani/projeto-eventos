@@ -113,6 +113,12 @@ async function registrarPresenca(codigoInscricao) {
 }
 
 function showSection(section) {
+    // Esconder página inicial se existir
+    const paginaInicial = document.getElementById('paginaInicialSection');
+    if (paginaInicial) {
+        paginaInicial.classList.remove('active');
+    }
+    
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     
     switch(section) {
