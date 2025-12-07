@@ -107,15 +107,6 @@ async function carregarPerfil() {
                         </button>
                     </div>
                 </form>
-                
-                <hr style="margin: 30px 0;">
-                
-                <div class="form-actions" style="text-align: center;">
-                    <button type="button" onclick="logout()" class="btn btn-danger btn-lg" 
-                            style="background-color: #dc3545; border-color: #dc3545;">
-                        🚪 Sair da Conta
-                    </button>
-                </div>
             </div>
         `;
 
