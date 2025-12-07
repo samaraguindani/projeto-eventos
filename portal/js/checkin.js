@@ -212,11 +212,6 @@ function mostrarCheckinDiretoOffline(cpf) {
             
             <form onsubmit="event.preventDefault(); fazerCheckinDiretoOffline('${cpf}');" style="margin-top: 20px;">
                 <div class="form-group">
-                    <label>Nome Completo *</label>
-                    <input type="text" id="nomeCheckinDireto" class="form-control" required>
-                </div>
-                
-                <div class="form-group">
                     <label>Email *</label>
                     <input type="email" id="emailCheckinDireto" class="form-control" required>
                 </div>
@@ -246,12 +241,11 @@ function mostrarCheckinDiretoOffline(cpf) {
 
 // Fazer check-in direto offline (quando usuário não encontrado localmente)
 async function fazerCheckinDiretoOffline(cpf) {
-    const nome = document.getElementById('nomeCheckinDireto')?.value.trim();
     const email = document.getElementById('emailCheckinDireto')?.value.trim();
     
     // Validar campos obrigatórios
-    if (!nome || !email) {
-        mostrarMensagem('Preencha todos os campos obrigatórios (Nome e Email)', 'error');
+    if (!email) {
+        mostrarMensagem('Preencha o campo obrigatório (Email)', 'error');
         return;
     }
     
@@ -263,22 +257,21 @@ async function fazerCheckinDiretoOffline(cpf) {
         // Gerar senha temporária local
         const senhaTemporaria = Math.random().toString(36).slice(-8);
         
-        // Salvar usuário offline primeiro (cadastro rápido)
+        // Salvar usuário offline primeiro (cadastro rápido) - sem nome
         const usuarioTempId = await offlineDB.adicionarUsuarioOffline({
-            nome: nome,
+            nome: null, // Nome será preenchido pelo backend na sincronização
             email: email,
             cpf: cpfLimpo,
             senha_temporaria: senhaTemporaria,
             evento_id: parseInt(eventoSelecionado)
         });
         
-        // Salvar check-in offline também
+        // Salvar check-in offline também - sem nome
         await offlineDB.adicionarCheckinOffline(
             cpf,
             parseInt(eventoSelecionado),
             usuarioTempId,
             {
-                nome: nome,
                 email: email,
                 cpf: cpfLimpo
             }

@@ -84,6 +84,60 @@ class OfflineDatabase {
             this.criarTabelasFaltantes(tabelasFaltando);
             this.salvar();
         }
+        
+        // Migrar tabela usuarios_offline se necessário (remover NOT NULL do nome)
+        this.migrarUsuariosOffline();
+    }
+    
+    // Migrar tabela usuarios_offline para permitir nome NULL
+    migrarUsuariosOffline() {
+        try {
+            // Verificar se a tabela existe
+            const result = this.db.exec("SELECT sql FROM sqlite_master WHERE type='table' AND name='usuarios_offline'");
+            if (result.length > 0) {
+                const sql = result[0].values[0][0];
+                // Se o nome ainda tem NOT NULL, precisamos recriar a tabela
+                if (sql && sql.includes('nome TEXT NOT NULL')) {
+                    console.log('Migrando tabela usuarios_offline para permitir nome NULL...');
+                    
+                    // Criar tabela temporária com nova estrutura
+                    this.db.run(`
+                        CREATE TABLE IF NOT EXISTS usuarios_offline_new (
+                            temp_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            nome TEXT,
+                            email TEXT NOT NULL UNIQUE,
+                            cpf TEXT NOT NULL UNIQUE,
+                            senha_temporaria TEXT,
+                            evento_id INTEGER NOT NULL,
+                            timestamp TEXT NOT NULL
+                        )
+                    `);
+                    
+                    // Copiar dados da tabela antiga para a nova
+                    this.db.run(`
+                        INSERT INTO usuarios_offline_new 
+                        (temp_id, nome, email, cpf, senha_temporaria, evento_id, timestamp)
+                        SELECT temp_id, nome, email, cpf, senha_temporaria, evento_id, timestamp
+                        FROM usuarios_offline
+                    `);
+                    
+                    // Remover tabela antiga
+                    this.db.run('DROP TABLE usuarios_offline');
+                    
+                    // Renomear tabela nova
+                    this.db.run('ALTER TABLE usuarios_offline_new RENAME TO usuarios_offline');
+                    
+                    // Recriar índices
+                    this.db.run('CREATE INDEX IF NOT EXISTS idx_usuarios_offline_cpf ON usuarios_offline(cpf)');
+                    this.db.run('CREATE INDEX IF NOT EXISTS idx_usuarios_offline_email ON usuarios_offline(email)');
+                    
+                    this.salvar();
+                    console.log('Migração de usuarios_offline concluída');
+                }
+            }
+        } catch (e) {
+            console.warn('Erro ao migrar tabela usuarios_offline:', e);
+        }
     }
 
     // Criar apenas tabelas específicas que faltam
@@ -118,7 +172,7 @@ class OfflineDatabase {
             'usuarios_offline': `
                 CREATE TABLE IF NOT EXISTS usuarios_offline (
                     temp_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    nome TEXT NOT NULL,
+                    nome TEXT,
                     email TEXT NOT NULL UNIQUE,
                     cpf TEXT NOT NULL UNIQUE,
                     senha_temporaria TEXT,
@@ -223,7 +277,7 @@ class OfflineDatabase {
             -- Tabela de usuários cadastrados offline (check-in)
             CREATE TABLE IF NOT EXISTS usuarios_offline (
                 temp_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nome TEXT NOT NULL,
+                nome TEXT,
                 email TEXT NOT NULL UNIQUE,
                 cpf TEXT NOT NULL UNIQUE,
                 senha_temporaria TEXT,

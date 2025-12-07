@@ -1,12 +1,14 @@
 // Mostrar/esconder menus por papel do usuário
 function atualizarMenuPorPapel() {
-    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
     const token = localStorage.getItem('token');
     const linkEventos = document.getElementById('linkEventos');
     const linkCheckin = document.getElementById('linkCheckin');
     const linkInscricoes = document.getElementById('linkInscricoes');
     const linkCertificados = document.getElementById('linkCertificados');
     const linkPerfil = document.getElementById('linkPerfil');
+    const userInfo = document.getElementById('userInfo');
+    const logoutBtn = document.getElementById('logoutBtn');
     
     // Certificados e Eventos sempre visíveis (públicos)
     if (linkCertificados) linkCertificados.style.display = 'inline';
@@ -20,11 +22,20 @@ function atualizarMenuPorPapel() {
         if (linkCheckin) linkCheckin.style.display = 'none';
         if (linkInscricoes) linkInscricoes.style.display = 'none';
         if (linkPerfil) linkPerfil.style.display = 'none';
+        if (userInfo) userInfo.textContent = '';
+        if (logoutBtn) logoutBtn.style.display = 'none';
         return;
     }
     
     // Se está logado, esconder Login
     if (linkLogin) linkLogin.style.display = 'none';
+    
+    // Atualizar informação do usuário na navbar
+    if (userInfo) {
+        const nomeUsuario = usuario.nome && usuario.nome.trim() ? usuario.nome : 'Usuário';
+        userInfo.textContent = `Olá, ${nomeUsuario}`;
+    }
+    if (logoutBtn) logoutBtn.style.display = 'inline';
     
     // Se tem usuário logado, mostrar baseado no papel
     // Todos veem Eventos e Perfil

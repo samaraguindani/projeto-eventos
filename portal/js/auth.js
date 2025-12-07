@@ -185,8 +185,14 @@ function mostrarConteudoAutenticado() {
     }
     
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
-    document.getElementById('userInfo').textContent = `Olá, ${usuario.nome || 'Usuário'}`;
-    document.getElementById('logoutBtn').style.display = 'inline-block';
+    const userInfo = document.getElementById('userInfo');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    if (userInfo) {
+        const nomeUsuario = usuario.nome && usuario.nome.trim() ? usuario.nome : 'Usuário';
+        userInfo.textContent = `Olá, ${nomeUsuario}`;
+    }
+    if (logoutBtn) logoutBtn.style.display = 'inline-block';
     
     // Atualizar menu baseado no papel do usuário
     if (typeof atualizarMenuPorPapel === 'function') {

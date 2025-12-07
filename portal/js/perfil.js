@@ -178,6 +178,11 @@ async function salvarPerfil() {
         const usuarioAtualizado = { ...usuario, ...data };
         localStorage.setItem('usuario', JSON.stringify(usuarioAtualizado));
 
+        // Atualizar nome na navbar
+        if (typeof atualizarMenuPorPapel === 'function') {
+            atualizarMenuPorPapel();
+        }
+
         mostrarMensagem('Perfil atualizado com sucesso!', 'success');
         
         // Recarregar perfil
