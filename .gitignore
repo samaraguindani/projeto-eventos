@@ -44,15 +44,34 @@ npm-debug.log
 .env
 .env.local
 *.env
+.env.*
 
 # Temporary files
 *.tmp
 *.temp
 **/tmp/
 
+# Config files (sensitive)
+**/appsettings.Development.json
+**/appsettings.Production.json
+**/config/database.php
+**/config/jwt.php
+**/config/*.local.php
 
+# Certificados gerados
+**/certificados/*.pdf
+**/certificados/*.html
 
+# SQLite databases (offline)
+*.db
+*.sqlite
+*.sqlite3
 
+# Backup files
+*.bak
+*.backup
+*.old
 
-
-
+# Cache
+**/cache/
+**/.cache/
