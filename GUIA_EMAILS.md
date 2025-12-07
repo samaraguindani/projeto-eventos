@@ -295,3 +295,5 @@ Método `gerarCorpo()` - linha 80+
 
 Pronto! O sistema de emails está funcionando! 📧✨
 
+
+

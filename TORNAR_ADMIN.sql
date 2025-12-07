@@ -21,3 +21,5 @@ SELECT id, nome, email, papel, cpf FROM usuarios ORDER BY id;
 -- Agora faça login com SEU email e senha normal!
 -- O sistema detectará que você é admin/atendente e mostrará os botões corretos
 
+
+

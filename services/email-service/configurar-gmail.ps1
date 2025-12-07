@@ -40,3 +40,5 @@ Write-Host "NOTA: Estas configuracoes sao temporarias (apenas nesta sessao do Po
 Write-Host "Para configuracao permanente, crie um arquivo .env (veja GUIA_CONFIGURACAO_EMAIL.md)" -ForegroundColor Yellow
 Write-Host ""
 
+
+

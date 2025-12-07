@@ -46,3 +46,5 @@ CREATE TRIGGER trigger_atualizar_vagas
 -- Confirmar
 SELECT 'Trigger atualizado com sucesso!' AS status;
 
+
+

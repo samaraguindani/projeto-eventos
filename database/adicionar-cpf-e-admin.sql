@@ -69,3 +69,5 @@ SELECT 'Admin - Email: admin@eventos.com | Senha: password'
 UNION ALL  
 SELECT 'Atendente - Email: atendente@eventos.com | Senha: password';
 
+
+

@@ -670,3 +670,5 @@ curl "http://localhost:8002/api/certificados/validar?codigo=CERT-ABC123DEF456"
 
 
 
+
+

@@ -117,3 +117,5 @@ Veja o guia completo em: `GUIA_CHECKIN.md`
 
 Execute os comandos acima e teste!
 
+
+

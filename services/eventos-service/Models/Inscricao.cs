@@ -14,3 +14,5 @@ public class Inscricao
     public DateTime UpdatedAt { get; set; }
 }
 
+
+

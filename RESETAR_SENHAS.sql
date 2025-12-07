@@ -17,3 +17,5 @@ UPDATE usuarios SET papel = 'admin', cpf = '000.000.000-00' WHERE id = 1;
 -- Verificar resultado
 SELECT id, nome, email, papel, cpf FROM usuarios ORDER BY id;
 
+
+

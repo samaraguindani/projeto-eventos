@@ -43,3 +43,5 @@ Write-Host "  Feche o terminal que foi aberto" -ForegroundColor Gray
 Write-Host ""
 Read-Host "Pressione Enter para continuar"
 
+
+
