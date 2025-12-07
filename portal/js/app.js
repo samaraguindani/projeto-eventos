@@ -54,15 +54,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Atualizar menu primeiro (esconder tudo se não estiver logado)
     atualizarMenuPorPapel();
 
-    // Verificar autenticação
-    if (verificarAutenticacao()) {
-        mostrarConteudoAutenticado();
-        atualizarMenuPorPapel(); // Atualizar novamente após login
-    } else {
-        mostrarConteudoNaoAutenticado();
-        // Mostrar página inicial apenas com login
-        mostrarPaginaInicial();
-    }
+    // O router já foi inicializado e vai processar a rota atual
+    // Não precisamos mais chamar mostrarConteudoAutenticado/NaoAutenticado aqui
+    // O router vai decidir qual tela mostrar baseado na URL
 });
 
 // Mostrar página inicial com login e eventos

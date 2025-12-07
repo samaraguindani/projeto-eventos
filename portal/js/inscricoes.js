@@ -121,6 +121,20 @@ function showSection(section) {
     
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     
+    // Mapear seção para rota
+    const routeMap = {
+        'eventos': '/eventos',
+        'minhasInscricoes': '/inscricoes',
+        'certificados': '/certificados',
+        'checkin': '/checkin',
+        'perfil': '/perfil'
+    };
+    
+    // Atualizar URL se router estiver disponível
+    if (typeof router !== 'undefined' && routeMap[section]) {
+        router.navigate(routeMap[section]);
+    }
+    
     switch(section) {
         case 'eventos':
             document.getElementById('eventosSection').classList.add('active');

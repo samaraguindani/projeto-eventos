@@ -10,8 +10,14 @@ async function fazerLogin(email, senha) {
         localStorage.setItem('usuario', JSON.stringify(data.usuario));
         
         mostrarMensagem('Login realizado com sucesso!', 'success');
-        mostrarConteudoAutenticado();
         atualizarMenuPorPapel();
+        
+        // Navegar para eventos após login
+        if (typeof router !== 'undefined') {
+            router.navigate('/eventos');
+        } else {
+            mostrarConteudoAutenticado();
+        }
         
         // Inicializar banco offline
         await offlineDB.init();
@@ -39,8 +45,14 @@ async function fazerCadastro(nome, email, senha, cpf, telefone) {
         localStorage.setItem('usuario', JSON.stringify(data.usuario));
         
         mostrarMensagem('Cadastro realizado com sucesso!', 'success');
-        mostrarConteudoAutenticado();
         atualizarMenuPorPapel();
+        
+        // Navegar para eventos após cadastro
+        if (typeof router !== 'undefined') {
+            router.navigate('/eventos');
+        } else {
+            mostrarConteudoAutenticado();
+        }
         
         // Inicializar banco offline
         await offlineDB.init();
@@ -94,16 +106,20 @@ async function cadastro(event) {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
-    mostrarConteudoNaoAutenticado();
-    
-    // Voltar para página inicial (login + eventos)
-    if (typeof mostrarPaginaInicial === 'function') {
-        mostrarPaginaInicial();
-    }
     
     // Atualizar menu para esconder todas as abas
     if (typeof atualizarMenuPorPapel === 'function') {
         atualizarMenuPorPapel();
+    }
+    
+    // Navegar para login após logout
+    if (typeof router !== 'undefined') {
+        router.navigate('/login');
+    } else {
+        mostrarConteudoNaoAutenticado();
+        if (typeof mostrarPaginaInicial === 'function') {
+            mostrarPaginaInicial();
+        }
     }
 }
 
@@ -163,10 +179,10 @@ function mostrarConteudoAutenticado() {
     }
     
     // Esconder seção de auth normal
-    document.getElementById('authSection').classList.remove('active');
-    
-    // Mostrar seção de eventos
-    document.getElementById('eventosSection').classList.add('active');
+    const authSection = document.getElementById('authSection');
+    if (authSection) {
+        authSection.classList.remove('active');
+    }
     
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
     document.getElementById('userInfo').textContent = `Olá, ${usuario.nome || 'Usuário'}`;
@@ -177,7 +193,14 @@ function mostrarConteudoAutenticado() {
         atualizarMenuPorPapel();
     }
     
-    carregarEventos();
+    // Navegar para eventos usando router se disponível
+    if (typeof router !== 'undefined') {
+        router.navigate('/eventos');
+    } else {
+        // Mostrar seção de eventos
+        document.getElementById('eventosSection').classList.add('active');
+        carregarEventos();
+    }
 }
 
 function mostrarConteudoNaoAutenticado() {

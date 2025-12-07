@@ -122,7 +122,7 @@ async function mostrarDetalhesEvento(evento) {
                 <div class="alert alert-info">
                     <strong>ℹ Faça login para se inscrever neste evento</strong>
                 </div>
-                <button onclick="showSection('authSection'); switchTab('login');" class="btn btn-primary btn-lg">
+                <button onclick="navigateTo('/login'); return false;" class="btn btn-primary btn-lg">
                     Fazer Login para Inscrever-se
                 </button>
             </div>
@@ -167,8 +167,16 @@ async function mostrarDetalhesEvento(evento) {
 
 // Funções auxiliares para admin/atendente
 function abrirCheckinEvento(eventoId, eventoTitulo) {
-    // Ir para seção de check-in
-    showSection('checkin');
+    // Navegar para check-in usando rota
+    if (typeof router !== 'undefined') {
+        router.navigate('/checkin');
+    } else {
+        if (typeof router !== 'undefined') {
+            router.navigate('/checkin');
+        } else {
+            showSection('checkin');
+        }
+    }
     
     // Selecionar o evento automaticamente
     setTimeout(() => {
