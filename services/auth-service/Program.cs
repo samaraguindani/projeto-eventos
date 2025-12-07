@@ -91,11 +91,13 @@ var app = builder.Build();
 app.UseMiddleware<RequestLoggingMiddleware>();
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+// Habilitar Swagger em todos os ambientes
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Auth Service API v1");
+    c.RoutePrefix = "swagger"; // Acesso: http://localhost:5001/swagger
+});
 
 app.UseCors("AllowAll");
 app.UseAuthentication();

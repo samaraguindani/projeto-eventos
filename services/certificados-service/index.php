@@ -19,6 +19,23 @@ $controller = new CertificadosController($db);
 
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+// Rota para Swagger UI (verificar antes de processar outras rotas)
+if ($path === '/swagger' || $path === '/swagger/' || strpos($path, '/swagger') === 0) {
+    // Se for exatamente /swagger ou /swagger/, mostrar a UI
+    if ($path === '/swagger' || $path === '/swagger/') {
+        include __DIR__ . '/swagger.php';
+        exit;
+    }
+    // Se for /swagger.yaml, servir o arquivo YAML
+    if ($path === '/swagger.yaml') {
+        header('Content-Type: application/yaml; charset=utf-8');
+        header('Access-Control-Allow-Origin: *');
+        readfile(__DIR__ . '/swagger.yaml');
+        exit;
+    }
+}
+
 $path = str_replace('/api/certificados', '', $path);
 
 // Rotas

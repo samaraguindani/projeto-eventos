@@ -1,0 +1,199 @@
+openapi: 3.0.0
+info:
+  title: Certificados Service API
+  description: API para emissão e validação de certificados
+  version: 1.0.0
+  contact:
+    name: Sistema de Eventos
+    email: contato@eventos.com
+
+servers:
+  - url: http://localhost:8002/api/certificados
+    description: Servidor de desenvolvimento
+
+tags:
+  - name: Certificados
+    description: Operações relacionadas a certificados
+
+security:
+  - BearerAuth: []
+
+paths:
+  /emitir:
+    post:
+      tags:
+        - Certificados
+      summary: Emitir certificado
+      description: Emite um certificado para uma inscrição com presença registrada
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - inscricao_id
+              properties:
+                inscricao_id:
+                  type: integer
+                  description: ID da inscrição
+                  example: 1
+      responses:
+        '200':
+          description: Certificado emitido com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Certificado emitido com sucesso
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      codigo:
+                        type: string
+                      inscricao_id:
+                        type: integer
+        '400':
+          description: Inscrição não encontrada ou sem presença registrada
+        '401':
+          description: Token inválido ou ausente
+
+  /validar:
+    get:
+      tags:
+        - Certificados
+      summary: Validar certificado
+      description: Valida um certificado pelo código (público)
+      parameters:
+        - name: codigo
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Código do certificado
+          example: CERT-20240101120000-1234
+      responses:
+        '200':
+          description: Certificado válido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valido:
+                    type: boolean
+                    example: true
+                  certificado:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      codigo:
+                        type: string
+                      inscricao_id:
+                        type: integer
+                      data_emissao:
+                        type: string
+                        format: date-time
+                      usuario_nome:
+                        type: string
+                      evento_titulo:
+                        type: string
+        '404':
+          description: Certificado não encontrado ou inválido
+
+  /{id}:
+    get:
+      tags:
+        - Certificados
+      summary: Obter certificado por ID
+      description: Retorna detalhes de um certificado específico
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do certificado
+      responses:
+        '200':
+          description: Detalhes do certificado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  codigo:
+                    type: string
+                  inscricao_id:
+                    type: integer
+                  data_emissao:
+                    type: string
+                    format: date-time
+        '404':
+          description: Certificado não encontrado
+
+  /inscricao/{inscricao_id}:
+    get:
+      tags:
+        - Certificados
+      summary: Obter certificado por inscrição
+      description: Retorna o certificado associado a uma inscrição
+      parameters:
+        - name: inscricao_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID da inscrição
+      responses:
+        '200':
+          description: Certificado encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Certificado não encontrado para esta inscrição
+
+  /download/{id}:
+    get:
+      tags:
+        - Certificados
+      summary: Download do certificado
+      description: Faz download do certificado em PDF
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do certificado
+      responses:
+        '200':
+          description: Arquivo PDF do certificado
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Certificado não encontrado
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT obtido através do Auth Service
+

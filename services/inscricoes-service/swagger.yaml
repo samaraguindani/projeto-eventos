@@ -1,0 +1,498 @@
+openapi: 3.0.0
+info:
+  title: Inscrições Service API
+  description: API para gestão de inscrições em eventos
+  version: 1.0.0
+  contact:
+    name: Sistema de Eventos
+    email: contato@eventos.com
+
+servers:
+  - url: http://localhost:8001/api/inscricoes
+    description: Servidor de desenvolvimento
+
+tags:
+  - name: Inscrições
+    description: Operações relacionadas a inscrições
+  - name: Presença
+    description: Operações relacionadas a presença/check-in
+  - name: Sincronização
+    description: Sincronização de dados offline
+  - name: Check-in
+    description: Operações de check-in na portaria
+
+security:
+  - BearerAuth: []
+
+paths:
+  /:
+    post:
+      tags:
+        - Inscrições
+      summary: Registrar nova inscrição
+      description: Registra uma nova inscrição em um evento
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - evento_id
+              properties:
+                evento_id:
+                  type: integer
+                  description: ID do evento
+                  example: 1
+      responses:
+        '201':
+          description: Inscrição realizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Inscrição realizada com sucesso
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      codigo_inscricao:
+                        type: string
+                      data_inscricao:
+                        type: string
+                        format: date-time
+        '400':
+          description: Erro na requisição
+        '401':
+          description: Token inválido ou ausente
+    get:
+      tags:
+        - Inscrições
+      summary: Listar inscrições do usuário
+      description: Retorna todas as inscrições do usuário autenticado
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista de inscrições
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  inscricoes:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          description: Token inválido ou ausente
+
+  /{id}:
+    get:
+      tags:
+        - Inscrições
+      summary: Obter inscrição por ID
+      description: Retorna detalhes de uma inscrição específica
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID da inscrição
+      responses:
+        '200':
+          description: Detalhes da inscrição
+        '404':
+          description: Inscrição não encontrada
+        '401':
+          description: Token inválido ou ausente
+    put:
+      tags:
+        - Inscrições
+      summary: Cancelar inscrição
+      description: Cancela uma inscrição
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID da inscrição
+      responses:
+        '200':
+          description: Inscrição cancelada com sucesso
+        '404':
+          description: Inscrição não encontrada ou já cancelada
+        '401':
+          description: Token inválido ou ausente
+
+  /presenca:
+    post:
+      tags:
+        - Presença
+      summary: Registrar presença
+      description: Registra presença usando código de inscrição
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - codigo_inscricao
+              properties:
+                codigo_inscricao:
+                  type: string
+                  description: Código da inscrição
+                  example: INS-20240101120000-1234
+      responses:
+        '200':
+          description: Presença registrada com sucesso
+        '400':
+          description: Código inválido ou presença já registrada
+        '404':
+          description: Inscrição não encontrada
+
+  /sincronizar:
+    post:
+      tags:
+        - Sincronização
+      summary: Sincronizar inscrições offline
+      description: Sincroniza múltiplas inscrições feitas offline
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                inscricoes:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      usuario_id:
+                        type: integer
+                      evento_id:
+                        type: integer
+                      temp_id:
+                        type: integer
+      responses:
+        '200':
+          description: Sincronização concluída
+
+  /presenca/sincronizar:
+    post:
+      tags:
+        - Sincronização
+      summary: Sincronizar presenças offline
+      description: Sincroniza múltiplas presenças registradas offline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                presencas:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      codigo_inscricao:
+                        type: string
+                      temp_id:
+                        type: integer
+      responses:
+        '200':
+          description: Sincronização concluída
+
+  /cancelar/sincronizar:
+    post:
+      tags:
+        - Sincronização
+      summary: Sincronizar cancelamentos offline
+      description: Sincroniza múltiplos cancelamentos feitos offline
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cancelamentos:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      inscricao_id:
+                        type: integer
+                      temp_id:
+                        type: integer
+      responses:
+        '200':
+          description: Sincronização concluída
+
+  /checkin/buscar:
+    post:
+      tags:
+        - Check-in
+      summary: Buscar participante por CPF
+      description: Busca um participante por CPF para check-in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cpf
+                - evento_id
+              properties:
+                cpf:
+                  type: string
+                  description: CPF do participante (com ou sem formatação)
+                  example: "123.456.789-00"
+                evento_id:
+                  type: integer
+                  description: ID do evento
+                  example: 1
+      responses:
+        '200':
+          description: Participante encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  encontrado:
+                    type: boolean
+                  usuario:
+                    type: object
+                  inscricao:
+                    type: object
+                  tem_inscricao:
+                    type: boolean
+        '404':
+          description: Participante não encontrado
+        '400':
+          description: CPF ou evento_id não informados
+
+  /checkin/registrar:
+    post:
+      tags:
+        - Check-in
+      summary: Registrar check-in por CPF
+      description: Registra check-in de um participante. Se não estiver inscrito, inscreve automaticamente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cpf
+                - evento_id
+              properties:
+                cpf:
+                  type: string
+                  description: CPF do participante
+                  example: "123.456.789-00"
+                evento_id:
+                  type: integer
+                  description: ID do evento
+                  example: 1
+      responses:
+        '200':
+          description: Check-in realizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  inscricao_criada:
+                    type: boolean
+                  data:
+                    type: object
+        '400':
+          description: Erro na requisição
+        '404':
+          description: Usuário ou evento não encontrado
+
+  /checkin/cadastro-rapido:
+    post:
+      tags:
+        - Check-in
+      summary: Cadastro rápido + inscrição + check-in
+      description: Realiza cadastro rápido, inscrição e check-in em uma única operação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cpf
+                - email
+                - evento_id
+              properties:
+                nome:
+                  type: string
+                  description: Nome do participante (opcional)
+                  example: "João Silva"
+                cpf:
+                  type: string
+                  description: CPF do participante
+                  example: "123.456.789-00"
+                email:
+                  type: string
+                  format: email
+                  description: Email do participante
+                  example: "joao@email.com"
+                evento_id:
+                  type: integer
+                  description: ID do evento
+                  example: 1
+      responses:
+        '200':
+          description: Cadastro e check-in realizados com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  usuario_id:
+                    type: integer
+                  inscricao_id:
+                    type: integer
+                  codigo_inscricao:
+                    type: string
+                  senha_temporaria:
+                    type: string
+        '400':
+          description: CPF ou email já cadastrado
+
+  /checkin/sincronizar-cadastros:
+    post:
+      tags:
+        - Check-in
+      summary: Sincronizar cadastros rápidos offline
+      description: Sincroniza cadastros rápidos realizados offline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usuarios:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      temp_id:
+                        type: integer
+                      nome:
+                        type: string
+                      email:
+                        type: string
+                      cpf:
+                        type: string
+                      senha_temporaria:
+                        type: string
+                      evento_id:
+                        type: integer
+      responses:
+        '200':
+          description: Sincronização concluída
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  resultados:
+                    type: array
+                    items:
+                      type: object
+
+  /checkin/sincronizar:
+    post:
+      tags:
+        - Check-in
+      summary: Sincronizar check-ins offline
+      description: Sincroniza check-ins realizados offline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                checkins:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      temp_id:
+                        type: integer
+                      cpf:
+                        type: string
+                      evento_id:
+                        type: integer
+                      dados_usuario:
+                        type: object
+                        properties:
+                          nome:
+                            type: string
+                          email:
+                            type: string
+                          cpf:
+                            type: string
+                          verificar_no_servidor:
+                            type: boolean
+      responses:
+        '200':
+          description: Sincronização concluída
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  resultados:
+                    type: array
+                    items:
+                      type: object
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT obtido através do Auth Service
+
