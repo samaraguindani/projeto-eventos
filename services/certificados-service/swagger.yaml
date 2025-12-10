@@ -197,3 +197,6 @@ components:
       bearerFormat: JWT
       description: Token JWT obtido através do Auth Service
 
+
+
+

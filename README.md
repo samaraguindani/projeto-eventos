@@ -32,12 +32,36 @@ createdb -U postgres eventos_db
 
 ---
 
-## 📚 Documentação
+## ⚙️ Configuração
 
-- **[COMECE-AQUI.md](./COMECE-AQUI.md)** - Guia rápido de 3 passos
-- **[SETUP-LOCAL-SEM-DOCKER.md](./SETUP-LOCAL-SEM-DOCKER.md)** - Setup completo local
-- **[GUIA_SWAGGER.md](./GUIA_SWAGGER.md)** - Como testar APIs
-- **[README-LOCAL.md](./README-LOCAL.md)** - Referência rápida
+### Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+
+```env
+# Banco de Dados
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=eventos_db
+DB_USER=postgres
+DB_PASSWORD=sua_senha_aqui
+
+# JWT
+JWT_SECRET=sua_chave_secreta_jwt_aqui
+JWT_ISSUER=EventosAuth
+JWT_AUDIENCE=EventosApp
+
+# Email (opcional)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=seu_email@gmail.com
+SMTP_PASS=sua_senha_app
+SMTP_SECURE=tls
+EMAIL_FROM=seu_email@gmail.com
+EMAIL_FROM_NAME=Sistema de Eventos
+```
+
+**Importante:** O arquivo `.env` está no `.gitignore` e não será commitado. Nunca commite credenciais!
 
 ---
 
@@ -179,6 +203,8 @@ SELECT * FROM vw_estatisticas_eventos;
 - ✅ CORS configurado
 - ✅ Validação de dados
 - ✅ Logs de auditoria
+- ✅ Credenciais via variáveis de ambiente
+- ✅ Arquivos sensíveis no .gitignore
 
 ---
 
@@ -295,7 +321,6 @@ Este projeto é open source.
 ## 📞 Suporte
 
 - **Issues:** Abra uma issue no GitHub
-- **Documentação:** Veja os arquivos `.md` na raiz do projeto
 - **Swagger:** http://localhost:5002/swagger
 
 ---

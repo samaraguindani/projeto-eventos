@@ -7,14 +7,32 @@ using EventosService.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configuração do banco de dados
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Host=177.44.248.102;Port=5433;Database=eventos_db;Username=eventos;Password=eventos123";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+{
+    var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
+    var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
+    var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "eventos_db";
+    var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "postgres";
+    var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
+    
+    if (string.IsNullOrEmpty(dbPassword))
+    {
+        throw new InvalidOperationException("DB_PASSWORD não configurada. Configure via variável de ambiente ou appsettings.json.");
+    }
+    
+    connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword}";
+}
 
 builder.Services.AddDbContext<EventosDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // Configuração JWT
-var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "MinhaChaveSecretaSuperSeguraParaJWT2024!@#$%";
+var jwtSecret = builder.Configuration["Jwt:Secret"] ?? Environment.GetEnvironmentVariable("JWT_SECRET");
+if (string.IsNullOrEmpty(jwtSecret))
+{
+    throw new InvalidOperationException("JWT Secret não configurado. Configure via variável de ambiente JWT_SECRET ou appsettings.json.");
+}
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "EventosAuth";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "EventosApp";
 
@@ -126,5 +144,6 @@ Console.WriteLine($"API: http://localhost:5002");
 Console.WriteLine($"Swagger: http://localhost:5002/swagger");
 Console.WriteLine("========================================");
 
-app.Run("http://localhost:5002");
+// Aceitar conexões de qualquer IP (para acesso via VM)
+app.Run("http://0.0.0.0:5002");
 

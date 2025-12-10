@@ -24,3 +24,6 @@ if (file_exists(__DIR__ . '/index.php')) {
 http_response_code(404);
 echo "404 Not Found";
 
+
+
+

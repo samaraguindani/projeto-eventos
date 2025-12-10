@@ -54,9 +54,13 @@ npm-debug.log
 # Config files (sensitive)
 **/appsettings.Development.json
 **/appsettings.Production.json
+**/appsettings.json
 **/config/database.php
 **/config/jwt.php
 **/config/*.local.php
+
+# Scripts com credenciais
+configurar-vm.sh
 
 # Certificados gerados
 **/certificados/*.pdf

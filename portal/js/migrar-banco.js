@@ -69,3 +69,6 @@ async function migrarBanco() {
 // Executar migração
 migrarBanco();
 
+
+
+
